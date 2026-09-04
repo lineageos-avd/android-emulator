@@ -3,6 +3,12 @@ on:
   push:
     tags: ['engine-*']
   workflow_dispatch:
+    inputs:
+      target:
+        description: Target to build (tags always build all targets)
+        type: choice
+        default: all
+        options: [all, linux-x86_64, windows-x86_64, darwin-x86_64, darwin-aarch64]
 permissions:
   contents: read
 jobs:
@@ -12,16 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target: linux-x86_64
-            runner: '["self-hosted", "Linux", "X64", "emulator-linux"]'
-          - target: windows-x86_64
-            runner: '"windows-2022"'
-          - target: darwin-x86_64
-            runner: '"macos-15-intel"'
-          - target: darwin-aarch64
-            runner: '"macos-15"'
-    runs-on: ${{ fromJSON(matrix.runner) }}
+        target: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.target != 'all' && format('["{0}"]', inputs.target) || '["linux-x86_64", "windows-x86_64", "darwin-x86_64", "darwin-aarch64"]') }}
+    runs-on: ${{ fromJSON('{"linux-x86_64":["self-hosted","Linux","X64","emulator-linux"],"windows-x86_64":"windows-2022","darwin-x86_64":"macos-15-intel","darwin-aarch64":"macos-15"}')[matrix.target] }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
