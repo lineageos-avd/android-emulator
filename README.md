@@ -54,7 +54,7 @@ complete Release has this schema:
 ```
 
 The stable catalog endpoint is
-`https://github.com/lineageos-avd/android-emulator/releases/latest/download/catalog.json`.
+`https://raw.githubusercontent.com/lineageos-avd/android-emulator/main/catalog.json`.
 `main/catalog.json` starts empty intentionally until the first complete source build.
 Platform tools/ADB come separately from Google and are not bundled here.
 
