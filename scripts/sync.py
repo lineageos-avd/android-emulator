@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO_VERSION = 'v2.66.1'
 REPO_LAUNCHER = 'https://gerrit.googlesource.com/git-repo/+/b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77/repo?format=TEXT'
 REPO_SHA256 = '1211b57b57e4122a9c546295a59b37d24068f1164d0e87bef096d5323c413e4f'
+REPO_URL = 'https://github.com/GerritCodeReview/git-repo.git'
 
 
 def run(*command, **kwargs):
@@ -54,7 +55,7 @@ def main():
     env.setdefault('GIT_COMMITTER_NAME', env['GIT_AUTHOR_NAME'])
     env.setdefault('GIT_COMMITTER_EMAIL', env['GIT_AUTHOR_EMAIL'])
     run(*repo, 'init', '-u', args.manifest_url, '-b', args.revision,
-        '--depth=1', '--repo-rev=' + REPO_VERSION, '--no-clone-bundle',
+        '--depth=1', '--repo-rev=' + REPO_VERSION, '--repo-url=' + REPO_URL, '--no-clone-bundle',
         '--platform=' + platform.system().lower(), cwd=source, env=env)
     run(*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags', '--fail-fast',
         '-j', str(args.jobs), cwd=source, env=env)
