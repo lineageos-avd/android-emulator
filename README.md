@@ -71,3 +71,9 @@ child builds if the physical disk falls below 20 GiB free or the build volume fa
 below 3 GiB. It records progress in `build-status.json`. Intel tests run through
 Rosetta on Apple Silicon; install Rosetta before starting. An interrupted source
 sync is resumed when the script runs again. The existing user emulator is untouched.
+
+For networks where Google Git is slow, set `EMULATOR_AOSP_MIRROR` to an HTTPS AOSP
+Git mirror, for example `https://mirrors.tuna.tsinghua.edu.cn/git/AOSP`. This changes
+only the current sync process's Git transport: all project SHA pins stay unchanged,
+mirror concurrency is capped at four, and missing objects retry the Google origin.
+No global Git configuration is modified.

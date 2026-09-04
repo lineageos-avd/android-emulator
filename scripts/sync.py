@@ -30,7 +30,10 @@ def main():
     parser.add_argument('--jobs', type=int, default=8)
     parser.add_argument('--revision', default='main', help='Recipe manifest commit/tag to synchronize')
     parser.add_argument('--manifest-url', default='https://github.com/lineageos-avd/android-emulator.git')
+    parser.add_argument('--aosp-mirror', default=os.environ.get('EMULATOR_AOSP_MIRROR'), help='Optional HTTPS AOSP Git mirror; immutable commits are unchanged and failures retry Google')
     args = parser.parse_args()
+    if args.aosp_mirror and not args.aosp_mirror.startswith('https://'):
+        parser.error('--aosp-mirror must be an HTTPS URL')
     if not shutil.which('gpg'):
         raise SystemExit('GnuPG is required to verify the signed repo release; enter nix develop first')
     source = args.source.resolve()
@@ -62,8 +65,22 @@ def main():
     repo_revision = subprocess.check_output(['git', '-C', str(source / '.repo/repo'), 'rev-parse', 'HEAD'], text=True).strip()
     if repo_revision != 'b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77':
         raise SystemExit(f'Repo tool revision mismatch: {repo_revision}')
-    run(*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags', '--fail-fast',
-        '-j', str(args.jobs), cwd=source, env=env)
+    direct_env = env.copy()
+    if args.aosp_mirror:
+        index = int(env.get('GIT_CONFIG_COUNT', '0'))
+        env[f'GIT_CONFIG_KEY_{index}'] = f'url.{args.aosp_mirror.rstrip("/")}/.insteadOf'
+        env[f'GIT_CONFIG_VALUE_{index}'] = 'https://android.googlesource.com/'
+        env['GIT_CONFIG_COUNT'] = str(index + 1)
+        print(f'Fetching exact AOSP commits through {args.aosp_mirror}', flush=True)
+    sync_command = [*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags', '--fail-fast',
+                    '-j', str(min(args.jobs, 4) if args.aosp_mirror else args.jobs)]
+    try:
+        run(*sync_command, cwd=source, env=env)
+    except subprocess.CalledProcessError:
+        if not args.aosp_mirror:
+            raise
+        print('Mirror synchronization failed; retrying remaining commits from Google', flush=True)
+        run(*sync_command, cwd=source, env=direct_env)
     run(*repo, 'manifest', '-r', '-o', source / 'resolved-manifest.xml', cwd=source, env=env)
     lock = json.loads((ROOT / 'upstream.json').read_text())
     actual = subprocess.check_output(['git', '-C', str(source / 'external/qemu'), 'rev-parse', 'HEAD'], text=True).strip()
