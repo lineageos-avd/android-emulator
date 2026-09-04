@@ -1,0 +1,94 @@
+name: Source engine build
+on:
+  push:
+    tags: ['engine-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.repository == 'lineageos-avd/android-emulator'
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x86_64
+            runner: '["self-hosted", "Linux", "X64", "emulator-linux"]'
+          - target: windows-x86_64
+            runner: '"windows-2022"'
+          - target: darwin-x86_64
+            runner: '"macos-15-intel"'
+          - target: darwin-aarch64
+            runner: '"macos-15"'
+    runs-on: ${{ fromJSON(matrix.runner) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: cachix/install-nix-action@v31
+        if: runner.os == 'macOS'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+      - name: Enable Windows symlinks and long paths
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.longpaths true
+          git config --global core.symlinks true
+          git config --global core.autocrlf false
+      - name: Checkout immutable upstream source
+        shell: bash
+        env:
+          RECIPE_REVISION: ${{ github.sha }}
+        run: python scripts/sync.py --source "$RUNNER_TEMP/engine-source" --jobs 8 --revision "$RECIPE_REVISION"
+      - name: Compile and run upstream tests on Linux
+        if: runner.os == 'Linux'
+        env:
+          TARGET: ${{ matrix.target }}
+        run: nix run . -- -c 'python3 scripts/build.py --source "$RUNNER_TEMP/engine-source" --target "$TARGET" --out "$RUNNER_TEMP/engine-out" --dist "$GITHUB_WORKSPACE/dist" --build-number "$GITHUB_RUN_NUMBER"'
+      - name: Compile and run upstream tests on macOS
+        if: runner.os == 'macOS'
+        env:
+          TARGET: ${{ matrix.target }}
+        run: nix develop -c python3 scripts/build.py --source "$RUNNER_TEMP/engine-source" --target "$TARGET" --out "$RUNNER_TEMP/engine-out" --dist dist --build-number "$GITHUB_RUN_NUMBER"
+      - name: Compile and run upstream tests on Windows
+        if: runner.os == 'Windows'
+        env:
+          TARGET: ${{ matrix.target }}
+        run: python scripts/build.py --source "$env:RUNNER_TEMP/engine-source" --target "$env:TARGET" --out "$env:RUNNER_TEMP/engine-out" --dist dist --build-number "$env:GITHUB_RUN_NUMBER"
+      - name: Export corresponding source
+        if: runner.os == 'Linux'
+        run: python3 scripts/source-archive.py --source "$RUNNER_TEMP/engine-source" --dist dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: engine-${{ matrix.target }}
+          path: |
+            dist/sdk-repo-*-emulator-*.zip
+            dist/provenance-*.json
+            dist/manifest-*.xml
+            dist/SHA256SUMS-*
+            dist/SOURCE_OFFER.md
+            dist/engine-corresponding-source.tar.gz*
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/engine-')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: engine-*
+          path: dist
+          merge-multiple: true
+      - run: python3 scripts/catalog.py --dist dist --tag "$GITHUB_REF_NAME"
+      - name: Publish complete preview build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Android Emulator $GITHUB_REF_NAME" --notes-file SOURCE_OFFER.md --latest

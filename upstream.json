@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "engine_version": "36.1-hub.1",
+  "manifest_url": "https://android.googlesource.com/platform/manifest",
+  "manifest_revision": "9b25cad8e44cf99246a5ffd579f1c21122865ab5",
+  "qemu_revision": "9f0811e72acfc46edc39d3d0baedd796f7d03309",
+  "upstream_branch": "emu-36-1-release",
+  "targets": ["linux-x86_64", "windows-x86_64", "darwin-x86_64", "darwin-aarch64"]
+}
