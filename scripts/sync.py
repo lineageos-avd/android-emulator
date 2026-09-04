@@ -2,6 +2,7 @@
 """Sync immutable AOSP project commits using Google's own repo tool."""
 import argparse
 import base64
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -22,6 +23,44 @@ REPO_URL = 'https://github.com/GerritCodeReview/git-repo.git'
 
 def run(*command, **kwargs):
     subprocess.run([str(value) for value in command], check=True, **kwargs)
+
+
+def recover_interrupted_fetches(source, manifest, mirror, jobs, integration_images):
+    """Repo drops depth after an interrupted first fetch without a shallow file.
+
+    Restore the pinned shallow snapshot only for incomplete managed repositories,
+    without changing work trees, removing objects, or pruning any user's commits.
+    """
+    repairs = []
+    host_group = 'platform-' + platform.system().lower()
+    for project in ET.parse(manifest).getroot().findall('project'):
+        groups = set(project.attrib.get('groups', '').split(','))
+        if 'notdefault' in groups and host_group not in groups and not (integration_images and 'integration-images' in groups):
+            continue
+        path = project.attrib.get('path', project.attrib['name'])
+        gitdir = source / '.repo/projects' / (path + '.git')
+        if not gitdir.is_dir():
+            continue
+        revision = project.attrib['revision']
+        check = subprocess.run(['git', '--git-dir=' + str(gitdir), 'rev-list', '--objects', '--missing=print', '--no-walk', revision], capture_output=True, text=True)
+        if check.returncode != 0 or any(line.startswith('?') for line in check.stdout.splitlines()):
+            repairs.append((gitdir, project.attrib['name'], revision))
+
+    def repair(item):
+        gitdir, project, revision = item
+        print(f'Restoring interrupted shallow snapshot: {project}', flush=True)
+        command = ['git', '--git-dir=' + str(gitdir), 'fetch', '--refetch', '--depth=1', '--no-tags']
+        if mirror:
+            try:
+                run(*command, mirror.rstrip('/') + '/' + project, revision)
+                return
+            except subprocess.CalledProcessError:
+                print(f'Mirror repair unavailable for {project}; using Google', flush=True)
+        run(*command, 'https://android.googlesource.com/' + project, revision)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(jobs, 4)) as pool:
+        for result in pool.map(repair, repairs):
+            pass
 
 
 def main():
@@ -67,6 +106,7 @@ def main():
     repo_revision = subprocess.check_output(['git', '-C', str(source / '.repo/repo'), 'rev-parse', 'HEAD'], text=True).strip()
     if repo_revision != 'b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77':
         raise SystemExit(f'Repo tool revision mismatch: {repo_revision}')
+    recover_interrupted_fetches(source, source / '.repo/manifests/default.xml', args.aosp_mirror, args.jobs, args.integration_images)
     direct_env = env.copy()
     if args.aosp_mirror:
         index = int(env.get('GIT_CONFIG_COUNT', '0'))
