@@ -3,7 +3,7 @@ pkgs.buildFHSEnv {
   name = "lineageos-build-env";
   targetPkgs = p: with p; [
     bash coreutils findutils gnugrep gnused gawk diffutils patch which file git git-repo
-    curl wget cacert rsync unzip zip xz bzip2 gzip tar python3 perl jdk17
+    curl wget cacert rsync unzip zip xz bzip2 gzip gnutar python3 perl jdk17
     gnumake ninja cmake gcc clang pkg-config ccache bc bison flex m4 gperf
     glibc zlib zlib.dev ncurses ncurses5 openssl libxml2 lz4 lzop dtc
     util-linux procps patchelf libxcrypt-legacy alsa-lib libGL libdrm

@@ -91,4 +91,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Android Emulator $GITHUB_REF_NAME" --notes-file SOURCE_OFFER.md --latest
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Android Emulator $GITHUB_REF_NAME" --notes-file SOURCE_OFFER.md --prerelease
+      - name: Update public catalog after publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/$GH_REPO/contents/catalog.json?ref=main" --jq .sha > current-sha
+          python3 - <<'PYTHON'
+          import base64, json, pathlib
+          payload = {"message": "Update compiled preview engine catalog", "branch": "main", "sha": pathlib.Path("current-sha").read_text().strip(), "content": base64.b64encode(pathlib.Path("dist/catalog.json").read_bytes()).decode()}
+          pathlib.Path("catalog-update.json").write_text(json.dumps(payload))
+          PYTHON
+          gh api --method PUT "repos/$GH_REPO/contents/catalog.json" --input catalog-update.json
