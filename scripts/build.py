@@ -7,6 +7,8 @@ from pathlib import Path
 import platform
 import subprocess
 
+from source_patches import apply_patches
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -27,8 +29,8 @@ def main():
     actual = subprocess.check_output(['git', '-C', str(qemu), 'rev-parse', 'HEAD'], text=True).strip()
     if actual != expected:
         raise SystemExit(f'Unrecognized QEMU revision: {actual}')
-    if subprocess.check_output(['git', '-C', str(qemu), 'status', '--porcelain'], text=True).strip():
-        raise SystemExit('QEMU checkout has uncommitted modifications; commit patches before building')
+    recipe_commit = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
+    apply_patches(source)
     dist.mkdir(parents=True, exist_ok=True)
     host = platform.system().lower()
     if host == 'windows':
@@ -54,7 +56,7 @@ def main():
     subprocess.run(command, cwd=qemu, env=env, check=True)
     subprocess.run(['python3' if host != 'windows' else 'python', str(ROOT / 'scripts/provenance.py'),
                     '--source', str(source), '--dist', str(dist), '--target', args.target,
-                    '--build-number', args.build_number, *(['--tests-skipped'] if args.skip_tests else [])], check=True)
+                    '--build-number', args.build_number, '--recipe-commit', recipe_commit, *(['--tests-skipped'] if args.skip_tests else [])], check=True)
 
 
 if __name__ == '__main__':

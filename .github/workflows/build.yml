@@ -46,10 +46,15 @@ jobs:
         run: python3 scripts/prepare-runner.py
       - uses: cachix/install-nix-action@v31
         if: runner.os == 'macOS'
+      - name: Install the compatible Windows C++ toolset
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
         with:
           arch: x64
+          toolset: '14.34'
       - name: Enable Windows symlinks and long paths
         if: runner.os == 'Windows'
         run: |
@@ -81,8 +86,13 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: nix develop -c python3 scripts/build.py --source "$ENGINE_SOURCE" --target "$TARGET" --out "$ENGINE_OUT" --dist dist --build-number "$GITHUB_RUN_NUMBER" --skip-acceleration-check
+      - name: Verify the pinned Clang and Windows STL pair
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1 -VerifyOnly -Source $env:ENGINE_SOURCE
       - name: Compile and run upstream tests on Windows
         if: runner.os == 'Windows'
+        shell: pwsh
         env:
           TARGET: ${{ matrix.target }}
         run: python scripts/build.py --source "$env:ENGINE_SOURCE" --target "$env:TARGET" --out "$env:ENGINE_OUT" --dist dist --build-number "$env:GITHUB_RUN_NUMBER" --skip-acceleration-check

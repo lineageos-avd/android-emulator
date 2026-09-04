@@ -25,7 +25,7 @@ def main():
     archive_path = args.dist / 'engine-corresponding-source.tar.gz'
     with tarfile.open(archive_path, 'w:gz', compresslevel=3) as archive:
         archive.add(manifest, arcname='resolved-manifest.xml')
-        for path in ['default.xml', 'upstream.json', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'nix', 'flake.nix', 'flake.lock']:
+        for path in ['default.xml', 'upstream.json', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'patches', 'nix', 'flake.nix', 'flake.lock']:
             archive.add(ROOT / path, arcname='hub-build/' + path)
         for project in ET.parse(manifest).getroot().findall('project'):
             path = project.attrib.get('path', project.attrib['name'])
