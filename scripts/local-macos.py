@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Build both Mac targets in a dedicated, already-mounted case-sensitive volume.
+
+Only child process groups started here can be stopped by the disk guard. Existing
+emulators and user applications are never touched. Run on a physical Mac with
+Xcode/SDK, Nix, and Rosetta for the Intel unit suite.
+"""
+import argparse
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import signal
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--workspace', type=Path, required=True)
+    parser.add_argument('--backing-store', type=Path, required=True, help='Existing path on the physical volume hosting the sparse bundle')
+    parser.add_argument('--jobs', type=int, default=4)
+    args = parser.parse_args()
+    if platform.system() != 'Darwin':
+        parser.error('A physical Mac is required')
+    workspace = args.workspace.resolve()
+    workspace.mkdir(parents=True, exist_ok=True)
+    if not workspace.is_mount():
+        parser.error('--workspace must be a dedicated mounted build volume')
+    source, dist = workspace / 'source', workspace / 'dist'
+    revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
+    stages = [('sync', [sys.executable, str(ROOT / 'scripts/sync.py'), '--source', str(source), '--revision', revision, '--jobs', '4'])]
+    for target in ['darwin-aarch64', 'darwin-x86_64']:
+        stages.append((target, ['nix', 'develop', str(ROOT), '-c', 'python3', str(ROOT / 'scripts/build.py'),
+                               '--source', str(source), '--target', target, '--out', str(workspace / ('out-' + target)),
+                               '--dist', str(dist / target), '--jobs', str(args.jobs), '--build-number', '36.1-hub.1']))
+    status_path = workspace / 'build-status.json'
+    for name, command in stages:
+        print(f'Starting {name}: {command}', flush=True)
+        state = {'stage': name, 'status': 'running', 'recipe_commit': revision}
+        status_path.write_text(json.dumps(state, indent=2) + '\n')
+        process = subprocess.Popen(command, cwd=ROOT, start_new_session=True)
+        try:
+            while process.poll() is None:
+                host_free = shutil.disk_usage(args.backing_store).free
+                build_free = shutil.disk_usage(workspace).free
+                if host_free < 20 * 1024**3 or build_free < 3 * 1024**3:
+                    os.killpg(process.pid, signal.SIGTERM)
+                    try:
+                        process.wait(timeout=20)
+                    except subprocess.TimeoutExpired:
+                        os.killpg(process.pid, signal.SIGKILL)
+                        process.wait()
+                    raise RuntimeError(f'Disk guard stopped this build: physical={host_free}, build-volume={build_free} free bytes')
+                time.sleep(5)
+            if process.returncode:
+                raise RuntimeError(f'{name} failed with exit {process.returncode}')
+        except BaseException as error:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGTERM)
+            state.update(status='failed', reason=str(error))
+            status_path.write_text(json.dumps(state, indent=2) + '\n')
+            raise
+        state['status'] = 'passed'
+        status_path.write_text(json.dumps(state, indent=2) + '\n')
+    print(f'Both Mac targets built and tested: {dist}', flush=True)
+
+
+if __name__ == '__main__':
+    main()

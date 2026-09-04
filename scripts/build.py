@@ -39,6 +39,11 @@ def main():
                 '--dist', str(dist), '--sdk_build_number', args.build_number,
                 '--config', 'release', '--crash', 'none', '--task-disable', 'clean',
                 '--test_jobs', str(min(args.jobs, 8))]
+    if host == 'darwin' and platform.machine().lower() in {'arm64', 'aarch64'} and args.target == 'darwin-x86_64':
+        # A native Mac can run the Intel unit suite through Rosetta. Upstream
+        # otherwise silently disables CTest for cross-architecture builds.
+        subprocess.run(['arch', '-x86_64', '/usr/bin/true'], check=True)
+        command += ['--task-enable', 'ctest']
     if args.skip_acceleration_check:
         command += ['--task-disable', 'accelerationcheck']
     if args.skip_tests:

@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import zipfile
 
@@ -33,6 +34,8 @@ def main():
         raise SystemExit(f'Expected one upstream engine distribution, found {candidates}')
     with zipfile.ZipFile(candidates[0], 'a', compression=zipfile.ZIP_DEFLATED) as archive:
         names = archive.namelist()
+        if any(stat.S_ISLNK(item.external_attr >> 16) for item in archive.infolist()):
+            raise SystemExit('Distribution contains symlinks unsupported by Hub safe extraction')
         if not any('NOTICE' in name for name in names):
             raise SystemExit('Distribution has no upstream NOTICE; refusing publication')
         archive.write(dist / f'provenance-{args.target}.json', 'emulator/hub-provenance.json')
