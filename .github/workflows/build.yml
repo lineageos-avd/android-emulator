@@ -66,6 +66,7 @@ jobs:
         if: runner.os == 'Linux'
         env:
           RECIPE_REVISION: ${{ github.sha }}
+          EMULATOR_AOSP_MIRROR: ${{ vars.AOSP_MIRROR_LINUX }}
         run: nix develop -c python3 scripts/sync.py --source "$ENGINE_SOURCE" --jobs 8 --revision "$RECIPE_REVISION"
       - name: Compile and run upstream tests on Linux
         if: runner.os == 'Linux'
