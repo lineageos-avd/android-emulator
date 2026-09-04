@@ -71,7 +71,10 @@ jobs:
         if: runner.os == 'Linux'
         env:
           TARGET: ${{ matrix.target }}
-        run: nix run . -- -c 'python3 scripts/build.py --source "$ENGINE_SOURCE" --target "$TARGET" --out "$ENGINE_OUT" --dist "$GITHUB_WORKSPACE/dist" --build-number "$GITHUB_RUN_NUMBER"'
+        run: |
+          # These variables expand inside the FHS shell.
+          # shellcheck disable=SC2016
+          nix run . -- -c 'python3 scripts/build.py --source "$ENGINE_SOURCE" --target "$TARGET" --out "$ENGINE_OUT" --dist "$GITHUB_WORKSPACE/dist" --build-number "$GITHUB_RUN_NUMBER"'
       - name: Compile and run upstream tests on macOS
         if: runner.os == 'macOS'
         env:
