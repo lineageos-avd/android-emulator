@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Sync immutable AOSP project commits using Google's own repo tool."""
 import argparse
+import base64
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,8 +14,9 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO_VERSION = 'v2.58'
-REPO_LAUNCHER = 'https://storage.googleapis.com/git-repo-downloads/repo'
+REPO_VERSION = 'v2.66.1'
+REPO_LAUNCHER = 'https://gerrit.googlesource.com/git-repo/+/b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77/repo?format=TEXT'
+REPO_SHA256 = '1211b57b57e4122a9c546295a59b37d24068f1164d0e87bef096d5323c413e4f'
 
 
 def run(*command, **kwargs):
@@ -37,8 +40,12 @@ def main():
     tools = source / '.hub-tools'
     tools.mkdir(exist_ok=True)
     launcher = tools / 'repo'
-    if not launcher.exists():
-        urllib.request.urlretrieve(REPO_LAUNCHER, launcher)
+    if not launcher.exists() or hashlib.sha256(launcher.read_bytes()).hexdigest() != REPO_SHA256:
+        with urllib.request.urlopen(REPO_LAUNCHER, timeout=120) as response:
+            data = base64.b64decode(response.read())
+        if hashlib.sha256(data).hexdigest() != REPO_SHA256:
+            raise SystemExit('Repo launcher checksum mismatch')
+        launcher.write_bytes(data)
     # The bootstrap loader verifies the explicitly selected, signed repo release.
     repo = [sys.executable, str(launcher)]
     env = os.environ.copy()
