@@ -7,7 +7,7 @@ Emulator Hub uses its existing authenticated local gRPC controller and ADB.
 
 ## Build
 
-Use a dedicated directory on a case-sensitive filesystem with at least 150 GB free.
+Use a dedicated directory on a case-sensitive filesystem with at least 100 GB free.
 Linux requires x86_64 and macOS requires Xcode with its command-line SDK installed.
 Windows uses VS2022 C++/ATL/MFC, a Windows SDK, Python 3.11+, Git symlink support
 and a short source path such as `C:\emu-source`. Administrator/developer-mode
@@ -78,3 +78,10 @@ Git mirror, for example `https://mirrors.tuna.tsinghua.edu.cn/git/AOSP`. This ch
 only the current sync process's Git transport: all project SHA pins stay unchanged,
 mirror concurrency is capped at four, and missing objects retry the Google origin.
 No global Git configuration is modified.
+
+The pinned Google system-image fixture repository is in the optional
+`integration-images` manifest group (`scripts/sync.py --integration-images`). It is
+used by the separate upstream end-to-end boot suite, not the CMake build or CTest
+unit suite. The default still includes the unit-test data in `common/testdata`.
+Hub/LineageOS boot tests use the separately published LineageOS image releases.
+Including Google's full fixture set increases disk requirements to at least 150 GB.

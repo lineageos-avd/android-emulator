@@ -107,7 +107,7 @@
   <project path="external/mesa3d" name="platform/external/mesa3d" revision="23f0cd7769968d301e9570aff501e5e2b702cf41" upstream="emu-36-1-release" />
 
   
-  <project path="prebuilts/android-emulator-build/system-images" name="platform/prebuilts/android-emulator-build/system-images" revision="dd5fdd791f3894ff0b8fdd0095a7890a2235ed77" clone-depth="1" upstream="emu-36-1-release" />
+  <project path="prebuilts/android-emulator-build/system-images" groups="notdefault,integration-images" name="platform/prebuilts/android-emulator-build/system-images" revision="dd5fdd791f3894ff0b8fdd0095a7890a2235ed77" clone-depth="1" upstream="emu-36-1-release" />
 
   
   <project path="tools/repohooks" name="platform/tools/repohooks" groups="developers,tools" revision="aad4d88f1b21f4618496f60c638d30914eade449" upstream="emu-36-1-release" />

@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--revision', default='main', help='Recipe manifest commit/tag to synchronize')
     parser.add_argument('--manifest-url', default='https://github.com/lineageos-avd/android-emulator.git')
     parser.add_argument('--aosp-mirror', default=os.environ.get('EMULATOR_AOSP_MIRROR'), help='Optional HTTPS AOSP Git mirror; immutable commits are unchanged and failures retry Google')
+    parser.add_argument('--integration-images', action='store_true', help='Also fetch the optional Google end-to-end integration image fixtures')
     args = parser.parse_args()
     if args.aosp_mirror and not args.aosp_mirror.startswith('https://'):
         parser.error('--aosp-mirror must be an HTTPS URL')
@@ -59,7 +60,8 @@ def main():
     env.setdefault('GIT_AUTHOR_EMAIL', 'build@users.noreply.github.com')
     env.setdefault('GIT_COMMITTER_NAME', env['GIT_AUTHOR_NAME'])
     env.setdefault('GIT_COMMITTER_EMAIL', env['GIT_AUTHOR_EMAIL'])
-    run(*repo, 'init', '-u', args.manifest_url, '-b', args.revision,
+    extra_groups = ['--groups=default,integration-images'] if args.integration_images else ['--groups=default']
+    run(*repo, 'init', *extra_groups, '-u', args.manifest_url, '-b', args.revision,
         '--depth=1', '--repo-rev=' + REPO_VERSION, '--repo-url=' + REPO_URL, '--no-clone-bundle',
         '--platform=' + platform.system().lower(), cwd=source, env=env)
     repo_revision = subprocess.check_output(['git', '-C', str(source / '.repo/repo'), 'rev-parse', 'HEAD'], text=True).strip()
