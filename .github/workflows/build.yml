@@ -23,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        if: runner.os != 'Linux'
         with:
           python-version: '3.12'
       - name: Reclaim unused SDK space on disposable macOS runner
@@ -41,10 +42,16 @@ jobs:
           git config --global core.symlinks true
           git config --global core.autocrlf false
       - name: Checkout immutable upstream source
+        if: runner.os != 'Linux'
         shell: bash
         env:
           RECIPE_REVISION: ${{ github.sha }}
         run: python scripts/sync.py --source "$RUNNER_TEMP/engine-source" --jobs 8 --revision "$RECIPE_REVISION"
+      - name: Checkout immutable upstream source in Nix on Linux
+        if: runner.os == 'Linux'
+        env:
+          RECIPE_REVISION: ${{ github.sha }}
+        run: nix develop -c python3 scripts/sync.py --source "$RUNNER_TEMP/engine-source" --jobs 8 --revision "$RECIPE_REVISION"
       - name: Compile and run upstream tests on Linux
         if: runner.os == 'Linux'
         env:
