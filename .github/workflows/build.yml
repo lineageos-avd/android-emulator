@@ -1,7 +1,9 @@
 name: Source engine build
 on:
   push:
+    branches: [main]
     tags: ['engine-*']
+    paths: ['default.xml', 'upstream.json', 'patches/**']
   workflow_dispatch:
     inputs:
       target:
@@ -23,11 +25,18 @@ jobs:
     concurrency:
       group: engine-${{ matrix.target }}
       cancel-in-progress: false
-    env:
-      ENGINE_SOURCE: ${{ runner.os == 'Linux' && format('{0}/../engine-source', runner.workspace) || format('{0}/engine-source', runner.temp) }}
-      ENGINE_OUT: ${{ runner.os == 'Linux' && format('{0}/../engine-out', runner.workspace) || format('{0}/engine-out', runner.temp) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Locate isolated source and output directories
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            echo "ENGINE_SOURCE=$RUNNER_WORKSPACE/../engine-source" >> "$GITHUB_ENV"
+            echo "ENGINE_OUT=$RUNNER_WORKSPACE/../engine-out" >> "$GITHUB_ENV"
+          else
+            echo "ENGINE_SOURCE=$RUNNER_TEMP/engine-source" >> "$GITHUB_ENV"
+            echo "ENGINE_OUT=$RUNNER_TEMP/engine-out" >> "$GITHUB_ENV"
+          fi
       - uses: actions/setup-python@v5
         if: runner.os != 'Linux'
         with:

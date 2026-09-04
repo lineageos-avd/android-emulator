@@ -37,7 +37,7 @@ python3 scripts/source-archive.py --source ../engine-source --dist dist
 
 ## Automation and artifacts
 
-`build.yml` runs four independent platform builds on tags or manual dispatch. Linux
+`build.yml` runs four independent platform builds on pinned manifest updates, tags or manual dispatch. Linux
 uses a trusted self-hosted runner labeled `emulator-linux` with Nix and 150 GB disk.
 The other targets use GitHub-hosted machines; repositories are fetched shallowly.
 The run fails rather than publishing partial builds or fabricated downloads.
@@ -61,3 +61,13 @@ Platform tools/ADB come separately from Google and are not bundled here.
 See [SOURCE_OFFER.md](SOURCE_OFFER.md) for source availability and licensing and
 [Google's build documentation](https://android.googlesource.com/platform/external/qemu/+/emu-36-1-release/android/docs/DEVELOPMENT.md)
 for upstream design and toolchain details.
+
+## Guarded local Mac fallback
+
+`scripts/local-macos.py` builds both Mac targets serially with four compiler jobs.
+Pass a dedicated case-sensitive APFS volume as `--workspace` and a path on its
+physical backing filesystem as `--backing-store`. The process stops only its own
+child builds if the physical disk falls below 20 GiB free or the build volume falls
+below 3 GiB. It records progress in `build-status.json`. Intel tests run through
+Rosetta on Apple Silicon; install Rosetta before starting. An interrupted source
+sync is resumed when the script runs again. The existing user emulator is untouched.
