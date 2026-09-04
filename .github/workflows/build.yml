@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Reclaim unused SDK space on disposable macOS runner
+        if: runner.os == 'macOS'
+        run: python3 scripts/prepare-runner.py
       - uses: cachix/install-nix-action@v31
         if: runner.os == 'macOS'
       - uses: ilammy/msvc-dev-cmd@v1
