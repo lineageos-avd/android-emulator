@@ -31,6 +31,8 @@ def main():
     parser.add_argument('--revision', default='main', help='Recipe manifest commit/tag to synchronize')
     parser.add_argument('--manifest-url', default='https://github.com/lineageos-avd/android-emulator.git')
     args = parser.parse_args()
+    if not shutil.which('gpg'):
+        raise SystemExit('GnuPG is required to verify the signed repo release; enter nix develop first')
     source = args.source.resolve()
     source.mkdir(parents=True, exist_ok=True)
     # Prevent accidentally mixing this build with a user's existing Android tree.
@@ -57,6 +59,9 @@ def main():
     run(*repo, 'init', '-u', args.manifest_url, '-b', args.revision,
         '--depth=1', '--repo-rev=' + REPO_VERSION, '--repo-url=' + REPO_URL, '--no-clone-bundle',
         '--platform=' + platform.system().lower(), cwd=source, env=env)
+    repo_revision = subprocess.check_output(['git', '-C', str(source / '.repo/repo'), 'rev-parse', 'HEAD'], text=True).strip()
+    if repo_revision != 'b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77':
+        raise SystemExit(f'Repo tool revision mismatch: {repo_revision}')
     run(*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags', '--fail-fast',
         '-j', str(args.jobs), cwd=source, env=env)
     run(*repo, 'manifest', '-r', '-o', source / 'resolved-manifest.xml', cwd=source, env=env)

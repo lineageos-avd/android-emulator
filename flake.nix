@@ -8,7 +8,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = import nixpkgs { inherit system; }; in {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ git git-repo python3 cmake ninja ccache curl unzip zip pkg-config ];
+          packages = with pkgs; [ git git-repo gnupg cacert python3 cmake ninja ccache curl unzip zip pkg-config ];
         };
       } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
         packages.default = pkgs.callPackage ./nix/fhs.nix { };
