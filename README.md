@@ -69,7 +69,8 @@ Pass a dedicated case-sensitive APFS volume as `--workspace` and a path on its
 physical backing filesystem as `--backing-store`. The process stops only its own
 child builds if the physical disk falls below 20 GiB free or the build volume falls
 below 3 GiB. It records progress in `build-status.json`. Intel tests run through
-Rosetta on Apple Silicon; install Rosetta before starting. An interrupted source
+Rosetta on Apple Silicon; install Rosetta before starting. Packaged intermediate build directories are removed before the
+next architecture to limit disk usage (`--keep-build-dirs` retains them). An interrupted source
 sync is resumed when the script runs again. The existing user emulator is untouched.
 
 For networks where Google Git is slow, set `EMULATOR_AOSP_MIRROR` to an HTTPS AOSP

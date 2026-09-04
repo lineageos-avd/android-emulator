@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--backing-store', type=Path, required=True, help='Existing path on the physical volume hosting the sparse bundle')
     parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--keep-build-dirs', action='store_true', help='Retain intermediate build directories after verified SDK ZIP packaging')
     args = parser.parse_args()
     if platform.system() != 'Darwin':
         parser.error('A physical Mac is required')
@@ -65,6 +66,11 @@ def main():
             state.update(status='failed', reason=str(error))
             status_path.write_text(json.dumps(state, indent=2) + '\n')
             raise
+        if name.startswith('darwin-') and not args.keep_build_dirs:
+            # Upstream has already packaged the runtime and debug symbols.
+            # Release only this pipeline's disposable intermediates before
+            # compiling the second architecture on a size-limited volume.
+            shutil.rmtree(workspace / ('out-' + name))
         state['status'] = 'passed'
         status_path.write_text(json.dumps(state, indent=2) + '\n')
     print(f'Both Mac targets built and tested: {dist}', flush=True)
