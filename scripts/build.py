@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--build-number', default='36.1-hub.1')
     parser.add_argument('--jobs', type=int, default=min(os.cpu_count() or 4, 32))
     parser.add_argument('--skip-tests', action='store_true', help='Build-only diagnostics; not allowed for release publication')
+    parser.add_argument('--skip-acceleration-check', action='store_true', help='For hosted builders without nested virtualization; unit tests still run')
     args = parser.parse_args()
     source, output, dist = args.source.resolve(), args.out.resolve(), args.dist.resolve()
     expected = json.loads((ROOT / 'upstream.json').read_text())['qemu_revision']
@@ -38,6 +39,8 @@ def main():
                 '--dist', str(dist), '--sdk_build_number', args.build_number,
                 '--config', 'release', '--crash', 'none', '--task-disable', 'clean',
                 '--test_jobs', str(min(args.jobs, 8))]
+    if args.skip_acceleration_check:
+        command += ['--task-disable', 'accelerationcheck']
     if args.skip_tests:
         command += ['--task-disable', 'ctest', '--task-disable', 'accelerationcheck']
     env = os.environ | {'CMAKE_BUILD_PARALLEL_LEVEL': str(args.jobs)}
