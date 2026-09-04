@@ -9,6 +9,8 @@ import stat
 import subprocess
 import zipfile
 
+from source_patches import describe_patches
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -18,13 +20,14 @@ def main():
     parser.add_argument('--dist', type=Path, required=True)
     parser.add_argument('--target', required=True)
     parser.add_argument('--build-number', required=True)
+    parser.add_argument('--recipe-commit', required=True)
     parser.add_argument('--tests-skipped', action='store_true')
     args = parser.parse_args()
     dist = args.dist
     dist.mkdir(parents=True, exist_ok=True)
     provenance = json.loads((ROOT / 'upstream.json').read_text())
     provenance.update(target=args.target, build_number=args.build_number,
-                      recipe_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
+                      recipe_commit=args.recipe_commit, applied_patches=describe_patches(),
                       upstream_tests='skipped' if args.tests_skipped else 'passed',
                       hardware_smoke_test='not-recorded')
     (dist / f'provenance-{args.target}.json').write_text(json.dumps(provenance, indent=2) + '\n')

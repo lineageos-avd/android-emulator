@@ -1,0 +1,36 @@
+diff --git a/android/build/python/aemu/process/environment.py b/android/build/python/aemu/process/environment.py
+--- a/android/build/python/aemu/process/environment.py
++++ b/android/build/python/aemu/process/environment.py
+@@ -64,9 +64,15 @@
+             self[key.upper()] = os.environ[key]
+ 
+         vs = self._visual_studio()
+-        logging.info("Loading environment from %s", vs)
++        toolset = os.environ.get("EMULATOR_MSVC_TOOLSET", "")
++        if toolset and not all(part.isascii() and part.isdigit() for part in toolset.split(".")):
++            raise ValueError("EMULATOR_MSVC_TOOLSET must be a numeric MSVC version")
++        vs_command = [vs]
++        if toolset:
++            vs_command.append("-vcvars_ver=" + toolset)
++        logging.info("Loading environment from %s (MSVC %s)", vs, toolset or "default")
+         env_lines = subprocess.check_output(
+-            [vs, "&&", "set"], encoding="utf-8"
++            vs_command + ["&&", "set"], encoding="utf-8"
+         ).splitlines()
+         for line in env_lines:
+             if "=" in line:
+@@ -81,6 +87,14 @@
+             raise VisualStudioMissingVarException(
+                 "Missing VCTOOLSINSTALLDIR in environment"
+             )
++
++        if toolset:
++            effective = self.get("VCTOOLSVERSION", "").rstrip("\\/")
++            if effective != toolset and not effective.startswith(toolset + "."):
++                raise VisualStudioMissingVarException(
++                    "Requested MSVC %s but vcvars selected %s" % (toolset, effective)
++                )
++            logging.info("Pinned MSVC environment selected: %s", effective)
+ 
+     def _visual_studio(self):
+         """Finds the visual studio installation
