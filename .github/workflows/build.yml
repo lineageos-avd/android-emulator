@@ -20,6 +20,12 @@ jobs:
       matrix:
         target: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.target != 'all' && format('["{0}"]', inputs.target) || '["linux-x86_64", "windows-x86_64", "darwin-x86_64", "darwin-aarch64"]') }}
     runs-on: ${{ fromJSON('{"linux-x86_64":["self-hosted","Linux","X64","emulator-linux"],"windows-x86_64":"windows-2022","darwin-x86_64":"macos-15-intel","darwin-aarch64":"macos-15"}')[matrix.target] }}
+    concurrency:
+      group: engine-${{ matrix.target }}
+      cancel-in-progress: false
+    env:
+      ENGINE_SOURCE: ${{ runner.os == 'Linux' && format('{0}/../engine-source', runner.workspace) || format('{0}/engine-source', runner.temp) }}
+      ENGINE_OUT: ${{ runner.os == 'Linux' && format('{0}/../engine-out', runner.workspace) || format('{0}/engine-out', runner.temp) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,30 +52,30 @@ jobs:
         shell: bash
         env:
           RECIPE_REVISION: ${{ github.sha }}
-        run: python scripts/sync.py --source "$RUNNER_TEMP/engine-source" --jobs 8 --revision "$RECIPE_REVISION"
+        run: python scripts/sync.py --source "$ENGINE_SOURCE" --jobs 8 --revision "$RECIPE_REVISION"
       - name: Checkout immutable upstream source in Nix on Linux
         if: runner.os == 'Linux'
         env:
           RECIPE_REVISION: ${{ github.sha }}
-        run: nix develop -c python3 scripts/sync.py --source "$RUNNER_TEMP/engine-source" --jobs 8 --revision "$RECIPE_REVISION"
+        run: nix develop -c python3 scripts/sync.py --source "$ENGINE_SOURCE" --jobs 8 --revision "$RECIPE_REVISION"
       - name: Compile and run upstream tests on Linux
         if: runner.os == 'Linux'
         env:
           TARGET: ${{ matrix.target }}
-        run: nix run . -- -c 'python3 scripts/build.py --source "$RUNNER_TEMP/engine-source" --target "$TARGET" --out "$RUNNER_TEMP/engine-out" --dist "$GITHUB_WORKSPACE/dist" --build-number "$GITHUB_RUN_NUMBER"'
+        run: nix run . -- -c 'python3 scripts/build.py --source "$ENGINE_SOURCE" --target "$TARGET" --out "$ENGINE_OUT" --dist "$GITHUB_WORKSPACE/dist" --build-number "$GITHUB_RUN_NUMBER"'
       - name: Compile and run upstream tests on macOS
         if: runner.os == 'macOS'
         env:
           TARGET: ${{ matrix.target }}
-        run: nix develop -c python3 scripts/build.py --source "$RUNNER_TEMP/engine-source" --target "$TARGET" --out "$RUNNER_TEMP/engine-out" --dist dist --build-number "$GITHUB_RUN_NUMBER" --skip-acceleration-check
+        run: nix develop -c python3 scripts/build.py --source "$ENGINE_SOURCE" --target "$TARGET" --out "$ENGINE_OUT" --dist dist --build-number "$GITHUB_RUN_NUMBER" --skip-acceleration-check
       - name: Compile and run upstream tests on Windows
         if: runner.os == 'Windows'
         env:
           TARGET: ${{ matrix.target }}
-        run: python scripts/build.py --source "$env:RUNNER_TEMP/engine-source" --target "$env:TARGET" --out "$env:RUNNER_TEMP/engine-out" --dist dist --build-number "$env:GITHUB_RUN_NUMBER" --skip-acceleration-check
+        run: python scripts/build.py --source "$env:ENGINE_SOURCE" --target "$env:TARGET" --out "$env:ENGINE_OUT" --dist dist --build-number "$env:GITHUB_RUN_NUMBER" --skip-acceleration-check
       - name: Export corresponding source
         if: runner.os == 'Linux'
-        run: python3 scripts/source-archive.py --source "$RUNNER_TEMP/engine-source" --dist dist
+        run: python3 scripts/source-archive.py --source "$ENGINE_SOURCE" --dist dist
       - uses: actions/upload-artifact@v4
         with:
           name: engine-${{ matrix.target }}
