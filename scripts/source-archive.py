@@ -29,7 +29,9 @@ def main():
             archive.add(ROOT / path, arcname='hub-build/' + path)
         for project in ET.parse(manifest).getroot().findall('project'):
             path = project.attrib.get('path', project.attrib['name'])
-            if path.startswith('prebuilts/'):
+            # This repository holds the source tarballs and downstream patches
+            # corresponding to linked prebuilt libraries (Qt, FFmpeg, etc.).
+            if path.startswith('prebuilts/') and path != 'prebuilts/android-emulator-build/archive':
                 continue
             checkout = args.source / path
             process = subprocess.Popen(['git', '-C', str(checkout), 'archive', '--format=tar', '--prefix=' + path + '/', project.attrib['revision']], stdout=subprocess.PIPE)
