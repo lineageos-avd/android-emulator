@@ -35,7 +35,9 @@ def main():
         command = ['cmd', '/c', str(qemu / 'android/rebuild.cmd')]
     else:
         command = ['sh', str(qemu / 'android/rebuild.sh')]
-    command += ['--aosp', str(source), '--target', args.target, '--out', str(output),
+    # Upstream infers the AOSP root as a Path from its script location. Its
+    # --aosp parser returns str, which breaks task construction in this revision.
+    command += ['--target', args.target, '--out', str(output),
                 '--dist', str(dist), '--sdk_build_number', args.build_number,
                 '--config', 'release', '--crash', 'none', '--task-disable', 'clean',
                 '--test_jobs', str(min(args.jobs, 8))]
