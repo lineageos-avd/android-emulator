@@ -6,7 +6,6 @@ Archives split below GitHub's 2 GiB per-asset limit and include SHA256SUMS.
 """
 import argparse
 import hashlib
-import io
 from pathlib import Path
 import subprocess
 import tarfile
@@ -14,6 +13,16 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def add_git_tree(archive, checkout, revision, prefix):
+    process = subprocess.Popen(['git', '-C', str(checkout), 'archive', '--format=tar',
+                                '--prefix=' + prefix + '/', revision], stdout=subprocess.PIPE)
+    with tarfile.open(fileobj=process.stdout, mode='r|') as source:
+        for member in source:
+            archive.addfile(member, source.extractfile(member) if member.isfile() else None)
+    if process.wait():
+        raise RuntimeError(f'git archive failed for {checkout}')
 
 
 def main():
@@ -29,8 +38,9 @@ def main():
         subprocess.run(['git', '-C', str(ROOT), 'bundle', 'create', str(bundle), '--all'], check=True)
         archive.add(bundle, arcname='hub-build/recipes.bundle')
         archive.add(manifest, arcname='resolved-manifest.xml')
-        for path in ['default.xml', 'upstream.json', 'README.md', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'patches', 'nix', 'flake.nix', 'flake.lock']:
-            archive.add(ROOT / path, arcname='hub-build/' + path)
+        # Include every tracked recipe dependency, including source maps/docs,
+        # while excluding bytecode caches and local diagnostic artifacts.
+        add_git_tree(archive, ROOT, 'HEAD', 'hub-build')
         for project in ET.parse(manifest).getroot().findall('project'):
             path = project.attrib.get('path', project.attrib['name'])
             # This repository holds the source tarballs and downstream patches
@@ -38,12 +48,7 @@ def main():
             if path.startswith('prebuilts/') and path != 'prebuilts/android-emulator-build/archive':
                 continue
             checkout = args.source / path
-            process = subprocess.Popen(['git', '-C', str(checkout), 'archive', '--format=tar', '--prefix=' + path + '/', project.attrib['revision']], stdout=subprocess.PIPE)
-            with tarfile.open(fileobj=process.stdout, mode='r|') as source:
-                for member in source:
-                    archive.addfile(member, source.extractfile(member) if member.isfile() else None)
-            if process.wait():
-                raise SystemExit(f'git archive failed for {path}')
+            add_git_tree(archive, checkout, project.attrib['revision'], path)
     # Split only if necessary. Both compressed archives and split pieces preserve all source.
     limit = 1900 * 1024 * 1024
     artifacts = [archive_path]

@@ -17,6 +17,14 @@ libraries such as Qt and FFmpeg. Prebuilt compilers and binary libraries are
 restored from the recorded AOSP manifest. Their upstream license files remain in their
 repositories and resulting distribution notices.
 
+Windows SDKs also include legacy Cygwin helpers. Their matching original source
+packages, Cygport build recipes and patches are distributed in the separate
+`windows-helpers-corresponding-source-35.3.8.tar.gz` supplement, with the source map,
+notice and checksums. See [the exact helper/source mapping](docs/windows-helpers-source.md).
+`scripts/windows-helpers-source.py` verifies the source pins and original package
+hashes before reproducing that supplement. Compatible Microsoft runtime packaging
+is described in [Windows runtime provenance](docs/windows-runtime.md).
+
 To build from source, follow README.md. Source archives and manifest remain publicly
 available alongside their corresponding binaries. Automatic `engine-*` tag releases
 require all four binary targets and the corresponding-source job to succeed.

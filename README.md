@@ -33,6 +33,7 @@ To export corresponding source after checkout:
 
 ```sh
 python3 scripts/source-archive.py --source ../engine-source --dist dist
+python3 scripts/windows-helpers-source.py --source ../engine-source --dist dist
 ```
 
 ## Automation and artifacts
