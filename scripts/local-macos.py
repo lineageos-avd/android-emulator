@@ -41,6 +41,8 @@ def main():
     stages = [] if args.skip_sync else [('sync', [sys.executable, str(ROOT / 'scripts/sync.py'), '--source', str(source), '--revision', revision, '--jobs', '4'])]
     targets = ['darwin-aarch64', 'darwin-x86_64'] if args.target == 'all' else [args.target]
     native = 'darwin-aarch64' if platform.machine().lower() in {'aarch64', 'arm64'} else 'darwin-x86_64'
+    if native == 'darwin-x86_64' and 'darwin-aarch64' in targets:
+        parser.error('Building and testing both targets requires Apple Silicon; on Intel use --target darwin-x86_64')
     for target in targets:
         command = ['nix', 'develop', str(ROOT), '-c', 'python3', str(ROOT / 'scripts/build.py'),
                    '--source', str(source), '--target', target, '--out', str(workspace / ('out-' + target)),
