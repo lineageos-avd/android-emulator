@@ -18,6 +18,15 @@
       "size": 186858832,
       "sha256": "66fbf4dd7b80915e0340cdd1cbd8be82670a77c71def7a52bb27d880959f146c",
       "executable": "emulator/emulator"
+    },
+    {
+      "host_os": "windows",
+      "host_arch": "x86_64",
+      "version": "35.3.8",
+      "url": "https://github.com/lineageos-avd/android-emulator/releases/download/source-35.3.8-preview.1/sdk-repo-windows-emulator-30.zip",
+      "size": 425620016,
+      "sha256": "2e8ea31765abf0add1a48750bafdfed860b33a3f36e8584e09b539b854f8afd8",
+      "executable": "emulator/emulator.exe"
     }
   ]
 }
