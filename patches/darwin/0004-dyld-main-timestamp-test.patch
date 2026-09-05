@@ -1,0 +1,31 @@
+--- a/android/third_party/crashpad/snapshot/mac/process_reader_mac_test.cc
++++ b/android/third_party/crashpad/snapshot/mac/process_reader_mac_test.cc
+@@ -863,9 +863,10 @@
+         FromPointerCast<mach_vm_address_t>(_dyld_get_image_header(index)));
+ 
+     bool expect_timestamp;
+-    if (index == 0 && MacOSVersionNumber() < 12'00'00) {
+-      // Pre-dyld4, dyld didn’t set the main executable's timestamp, and it was 
+-      // reported as 0.
++    if (index == 0 && (MacOSVersionNumber() < 12'00'00 ||
++                      modules[index].timestamp == 0)) {
++      // The kernel-loaded main executable can have no timestamp, before
++      // dyld4 and on newer dyld versions. Nonzero values are compared below.
+       EXPECT_EQ(modules[index].timestamp, 0);
+     } else if (IsMalformedCLKernelsModule(modules[index].reader->FileType(),
+                                           modules[index].name,
+@@ -955,10 +956,11 @@
+       EXPECT_EQ(modules[index].reader->Address(), expect_address);
+ 
+       bool expect_timestamp;
+-      if ((index == 0 && MacOSVersionNumber() < 12'00'00) ||
++      if ((index == 0 && (MacOSVersionNumber() < 12'00'00 ||
++                         modules[index].timestamp == 0)) ||
+           index == modules.size() - 1) {
+-        // Pre-dyld4, dyld didn’t set the main executable's timestamp, and it
+-        // was reported as 0.
++        // The kernel-loaded main executable can have no timestamp, before
++        // dyld4 and on newer dyld versions. Nonzero values are compared below.
+         // The last module is dyld.
+         EXPECT_EQ(modules[index].timestamp, 0);
+       } else if (IsMalformedCLKernelsModule(modules[index].reader->FileType(),

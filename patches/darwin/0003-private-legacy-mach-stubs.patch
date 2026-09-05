@@ -1,0 +1,19 @@
+--- a/android/third_party/crashpad/util/CMakeLists.txt
++++ b/android/third_party/crashpad/util/CMakeLists.txt
+@@ -282,6 +282,16 @@
+     ${CMAKE_OSX_SYSROOT}/usr/include/mach/notify.defs
+     mach/child_port.defs)
+ 
++  # libSystem also exports legacy exception_raise stubs, but newer macOS
++  # treats those as kernel RPCs. Give our generated userspace stubs private
++  # names so archive linking cannot silently bind calls to libSystem instead.
++  set(CRASHPAD_LEGACY_MACH_NAMES
++      exception_raise=crashpad_legacy_exception_raise
++      exception_raise_state=crashpad_legacy_exception_raise_state
++      exception_raise_state_identity=crashpad_legacy_exception_raise_state_identity)
++  target_compile_definitions(crashpad_macos_mig PRIVATE ${CRASHPAD_LEGACY_MACH_NAMES})
++  target_compile_definitions(crashpad_util PRIVATE ${CRASHPAD_LEGACY_MACH_NAMES})
++
+   target_link_libraries(
+     crashpad_util PRIVATE crashpad_macos_mig "-framework CoreFoundation"
+                           "-framework Foundation" "-framework IOKit" bsm)
