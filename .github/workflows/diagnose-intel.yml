@@ -10,6 +10,15 @@ on:
         description: SHA256 of the diagnostic ZIP
         type: string
         required: true
+      scope:
+        description: Targeted diagnostic set
+        type: choice
+        default: crashpad
+        options: [crashpad, socket-sigpipe]
+      repeat:
+        description: Number of independent repetitions, at most 100
+        type: number
+        default: 1
 permissions:
   # GitHub restricts private draft release assets to principals with write access.
   contents: write
@@ -41,7 +50,9 @@ jobs:
       - name: Run only the selected cases with process-group deadlines
         env:
           ARCHIVE_SHA256: ${{ inputs.sha256 }}
-        run: python3 scripts/diagnose-intel.py --archive diagnostic.zip --sha256 "$ARCHIVE_SHA256" --output results
+          DIAGNOSTIC_SCOPE: ${{ inputs.scope }}
+          DIAGNOSTIC_REPEAT: ${{ inputs.repeat }}
+        run: python3 scripts/diagnose-intel.py --archive diagnostic.zip --sha256 "$ARCHIVE_SHA256" --output results --scope "$DIAGNOSTIC_SCOPE" --repeat "$DIAGNOSTIC_REPEAT"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
