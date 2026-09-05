@@ -61,10 +61,18 @@ def main():
         # Nix's ld wrapper must not append compiler sysroot directories to
         # runtime search paths; upstream already provides $ORIGIN paths.
         env['NIX_DONT_SET_RPATH'] = '1'
-    if host == 'darwin' and not env.get('EMULATOR_MACOS_SDK'):
-        sdk = Path('/Library/Developer/CommandLineTools/SDKs/MacOSX14.5.sdk')
-        if sdk.is_dir():
-            env['EMULATOR_MACOS_SDK'] = str(sdk)
+    if host == 'darwin':
+        sdk = env.get('EMULATOR_MACOS_SDK')
+        compatible = Path('/Library/Developer/CommandLineTools/SDKs/MacOSX14.5.sdk')
+        if not sdk:
+            sdk = str(compatible) if compatible.is_dir() else subprocess.check_output(
+                ['/usr/bin/xcrun', '--sdk', 'macosx', '--show-sdk-path'], text=True).strip()
+        deployment = '11.0' if args.target == 'darwin-aarch64' else '10.14'
+        env.update(EMULATOR_MACOS_SDK=sdk, SDKROOT=sdk, MACOSX_DEPLOYMENT_TARGET=deployment)
+        # Override Nix's SDK CMake defaults when using Google's compiler.
+        # Nix's SDK strips libc++ stubs because its own toolchain supplies them.
+        command += ['--cmake_option', 'CMAKE_OSX_SYSROOT=' + sdk,
+                    '--cmake_option', 'CMAKE_OSX_DEPLOYMENT_TARGET=' + deployment]
     subprocess.run(command, cwd=qemu, env=env, check=True)
     subprocess.run(['python3' if host != 'windows' else 'python', str(ROOT / 'scripts/provenance.py'),
                     '--source', str(source), '--dist', str(dist), '--target', args.target,
