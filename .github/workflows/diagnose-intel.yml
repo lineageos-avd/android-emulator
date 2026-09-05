@@ -1,0 +1,51 @@
+name: Bounded native Intel diagnostics
+on:
+  workflow_dispatch:
+    inputs:
+      asset_id:
+        description: Asset ID in the unique temporary draft release
+        type: string
+        required: true
+      sha256:
+        description: SHA256 of the diagnostic ZIP
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: macos-15-intel
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download the private draft asset by immutable ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET_ID: ${{ inputs.asset_id }}
+          ARCHIVE_SHA256: ${{ inputs.sha256 }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, subprocess
+          asset = os.environ['ASSET_ID']
+          if not asset.isdecimal() or not re.fullmatch('[a-f0-9]{64}', os.environ['ARCHIVE_SHA256']):
+              raise SystemExit('Invalid diagnostic asset ID or SHA256')
+          with pathlib.Path('diagnostic.zip').open('wb') as output:
+              subprocess.run(['gh', 'api', 'repos/' + os.environ['GITHUB_REPOSITORY'] + '/releases/assets/' + asset, '-H', 'Accept: application/octet-stream'], stdout=output, check=True)
+          PY
+      - name: Run only the selected cases with process-group deadlines
+        env:
+          ARCHIVE_SHA256: ${{ inputs.sha256 }}
+        run: python3 scripts/diagnose-intel.py --archive diagnostic.zip --sha256 "$ARCHIVE_SHA256" --output results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-intel-diagnostic-logs
+          path: |
+            results/*.json
+            results/*.log
+            results/*.xml
+            results/*-otool.txt
+          if-no-files-found: warn
