@@ -1,0 +1,60 @@
+name: Verify native macOS SDK artifact
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Completed source build run containing the requested SDK
+        type: string
+        required: true
+      target:
+        description: Native macOS architecture to verify
+        type: choice
+        options: [darwin-x86_64, darwin-aarch64]
+        default: darwin-x86_64
+permissions:
+  actions: read
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'lineageos-avd/android-emulator'
+    runs-on: ${{ inputs.target == 'darwin-x86_64' && 'macos-15-intel' || 'macos-15' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate producing source build and download its immutable SDK
+        env:
+          BUILD_RUN_ID: ${{ inputs.run_id }}
+          SDK_TARGET: ${{ inputs.target }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, subprocess
+          run_id, target = os.environ['BUILD_RUN_ID'], os.environ['SDK_TARGET']
+          if not run_id.isdecimal() or target not in ('darwin-x86_64', 'darwin-aarch64'):
+              raise SystemExit('Expected a numeric source run ID and a supported native target')
+          repo = os.environ['GITHUB_REPOSITORY']
+          run = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}']))
+          jobs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}/jobs']))
+          if run['path'] != '.github/workflows/build.yml' or run['status'] != 'completed':
+              raise SystemExit('Expected a completed source build workflow')
+          if not any(job['name'] == f'build ({target})' and job['conclusion'] == 'success' for job in jobs['jobs']):
+              raise SystemExit('The native source build and upstream tests did not succeed')
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/producing-run.json').write_text(json.dumps({key: run[key] for key in ('id', 'head_sha', 'html_url', 'path')}, indent=2))
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env:
+              env.write('EXPECTED_RECIPE_COMMIT=' + run['head_sha'] + '\n')
+          subprocess.run(['gh', 'run', 'download', run_id, '--repo', repo, '--name', f'engine-{target}', '--dir', 'dist'], check=True)
+          PY
+      - name: Verify hashes and execute the extracted native SDK
+        env:
+          SDK_TARGET: ${{ inputs.target }}
+        run: python scripts/verify-sdk.py --dist dist --target "$SDK_TARGET" --expected-recipe-commit "$EXPECTED_RECIPE_COMMIT" --output "evidence/sdk-verification-$SDK_TARGET.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sdk-verification-${{ inputs.target }}
+          path: evidence/*.json
+          if-no-files-found: error
