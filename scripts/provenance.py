@@ -26,6 +26,8 @@ def main():
     dist = args.dist
     dist.mkdir(parents=True, exist_ok=True)
     provenance = json.loads((ROOT / 'upstream.json').read_text())
+    properties = dict(line.split('=', 1) for line in (args.source / 'external/qemu/source.properties').read_text().splitlines() if '=' in line)
+    provenance['sdk_version'] = properties['Pkg.Revision'].strip()
     provenance.update(target=args.target, build_number=args.build_number,
                       recipe_commit=args.recipe_commit, applied_patches=describe_patches(),
                       upstream_tests='skipped' if args.tests_skipped else 'passed',
