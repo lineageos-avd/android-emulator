@@ -10,6 +10,7 @@ import io
 from pathlib import Path
 import subprocess
 import tarfile
+import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,7 +24,10 @@ def main():
     args.dist.mkdir(parents=True, exist_ok=True)
     manifest = args.source / 'resolved-manifest.xml'
     archive_path = args.dist / 'engine-corresponding-source.tar.gz'
-    with tarfile.open(archive_path, 'w:gz', compresslevel=3) as archive:
+    with tempfile.TemporaryDirectory(prefix='engine-recipe-bundle-') as temporary, tarfile.open(archive_path, 'w:gz', compresslevel=3) as archive:
+        bundle = Path(temporary) / 'recipes.bundle'
+        subprocess.run(['git', '-C', str(ROOT), 'bundle', 'create', str(bundle), '--all'], check=True)
+        archive.add(bundle, arcname='hub-build/recipes.bundle')
         archive.add(manifest, arcname='resolved-manifest.xml')
         for path in ['default.xml', 'upstream.json', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'patches', 'nix', 'flake.nix', 'flake.lock']:
             archive.add(ROOT / path, arcname='hub-build/' + path)
