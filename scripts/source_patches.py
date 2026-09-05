@@ -16,9 +16,10 @@ def describe_patches(host=None):
     paths = [*sorted((ROOT / 'patches/common').glob('*.patch')), *sorted((ROOT / 'patches' / host).glob('*.patch'))]
     records = [{'file': path.relative_to(ROOT).as_posix(), 'project': 'external/qemu',
                 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for path in paths]
-    records += [{'file': path.relative_to(ROOT).as_posix(), 'project': 'hardware/google/gfxstream',
-                 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
-                for path in sorted((ROOT / 'patches' / ('gfxstream-' + host)).glob('*.patch'))]
+    for namespace, project in [('gfxstream', 'hardware/google/gfxstream'), ('tink', 'external/tink')]:
+        records += [{'file': path.relative_to(ROOT).as_posix(), 'project': project,
+                     'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+                    for path in sorted((ROOT / 'patches' / (namespace + '-' + host)).glob('*.patch'))]
     return records
 
 
