@@ -25,7 +25,8 @@ def main():
         provenance = json.loads((args.dist / f'provenance-{target}.json').read_text())
         if provenance['upstream_tests'] != 'passed':
             raise SystemExit(f'Refusing catalog publication for untested {target}')
-        assets = list(args.dist.glob(f'sdk-repo-{upstream_target}-emulator-*.zip'))
+        assets = [path for path in args.dist.glob(f'sdk-repo-{upstream_target}-emulator-*.zip')
+                  if '-symbols-' not in path.name and '-debug-' not in path.name]
         if len(assets) != 1:
             raise SystemExit(f'Missing/ambiguous distribution for {target}: {assets}')
         asset = assets[0]
