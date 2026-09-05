@@ -72,7 +72,7 @@ def main():
                 artifacts.append(part)
                 index += 1
         archive_path.unlink()
-    with (args.dist / 'SHA256SUMS-source').open('w') as checksums:
+    with (args.dist / 'SHA256SUMS-source').open('w', newline='\n') as checksums:
         for path in artifacts:
             with path.open('rb') as source:
                 checksums.write(f'{hashlib.file_digest(source, "sha256").hexdigest()}  {path.name}\n')

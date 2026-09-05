@@ -71,7 +71,7 @@ def main():
             shutil.copy2(path, destination)
     checksum = args.out / f'SHA256SUMS-{args.target}'
     checksum.write_text(''.join(f'{digest(path)}  {path.name}\n' for path in sorted(args.out.iterdir())
-                               if path.is_file() and path != checksum), encoding='utf-8')
+                               if path.is_file() and path != checksum), encoding='utf-8', newline='\n')
     print(f'Staged {len(files)} verified release assets for {args.target}; build-only archives remain in {args.dist}')
 
 

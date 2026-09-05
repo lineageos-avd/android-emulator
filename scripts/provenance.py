@@ -46,7 +46,7 @@ def main():
         archive.write(dist / f'provenance-{args.target}.json', 'emulator/hub-provenance.json')
         archive.write(args.source / 'resolved-manifest.xml', 'emulator/hub-source-manifest.xml')
     shutil.copy2(ROOT / 'SOURCE_OFFER.md', dist)
-    with (dist / f'SHA256SUMS-{args.target}').open('w') as output:
+    with (dist / f'SHA256SUMS-{args.target}').open('w', newline='\n') as output:
         for path in sorted(dist.iterdir()):
             if path.is_file() and not path.name.startswith('SHA256SUMS'):
                 with path.open('rb') as stream:
