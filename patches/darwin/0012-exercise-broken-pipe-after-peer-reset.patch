@@ -1,0 +1,42 @@
+Subject: [PATCH] Exercise the broken-pipe path after an asynchronous TCP reset
+
+Darwin send() can first report ECONNRESET when a TCP peer closes. Consume that
+pending reset and continue the existing bounded send loop until the intended
+EPIPE/EPROTOTYPE path. Allow 1 ms between retries so kernel close processing is
+not raced by 100 immediate buffered sends. Keep the socket-pair test, eventual
+broken-pipe error and SIGPIPE handler assertions; production code is unchanged.
+
+Reference: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/send.2.html
+
+--- a/android/android-emu-base/android/base/sockets/SocketUtils_unittest.cpp
++++ b/android/android-emu-base/android/base/sockets/SocketUtils_unittest.cpp
+@@ -13,6 +13,9 @@
+ 
+ #include "aemu/base/sockets/ScopedSocket.h"
+ #include <gtest/gtest.h>
++
++#include <chrono>
++#include <thread>
+ 
+ #include <errno.h>
+ #include <signal.h>
+@@ -201,8 +204,19 @@
+         const int kMaxSendCount = 100;
+         int n = 0;
+         while (n < kMaxSendCount) {
++            if (n > 0) {
++                // Give the asynchronous TCP close/reset time to reach this
++                // endpoint instead of filling its send buffer in a tight loop.
++                std::this_thread::sleep_for(std::chrono::milliseconds(1));
++            }
+             int ret = socketSend(s3.get(), "xxxx", 4);
+             if (ret < 0) {
++                if (errno == ECONNRESET) {
++                    // Consume the pending reset and exercise EPIPE on a later
++                    // send. The signal handler checks every attempt below.
++                    ++n;
++                    continue;
++                }
+ #ifdef __APPLE__
+                 // On OS X, errno is sometimes EPROTOTYPE instead of EPIPE
+                 // when this happens.
