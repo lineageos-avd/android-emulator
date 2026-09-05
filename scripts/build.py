@@ -84,15 +84,6 @@ def main():
         # Nix's SDK strips libc++ stubs because its own toolchain supplies them.
         command += ['--cmake_option', 'CMAKE_OSX_SYSROOT=' + sdk,
                     '--cmake_option', 'CMAKE_OSX_DEPLOYMENT_TARGET=' + deployment]
-        # Standalone graphics tests need the SDK's bundled Vulkan loader and
-        # a consistent headless EGL/Vulkan pair, rather than host OpenGL.
-        graphics_paths = [output / 'lib64/vulkan', output / 'lib64/gles_angle', output / 'lib64']
-        env['DYLD_LIBRARY_PATH'] = os.pathsep.join(map(str, graphics_paths))
-        env['ANGLE_DEFAULT_PLATFORM'] = 'swiftshader'
-        env['ANDROID_EMU_VK_ICD'] = 'swiftshader'
-        env['VK_ICD_FILENAMES'] = str(output / 'lib64/vulkan/vk_swiftshader_icd.json')
-        env['ANDROID_EMU_HEADLESS'] = '1'
-
     subprocess.run(command, cwd=qemu, env=env, check=True)
     subprocess.run(['python3' if host != 'windows' else 'python', str(ROOT / 'scripts/provenance.py'),
                     '--source', str(source), '--dist', str(dist), '--target', args.target,

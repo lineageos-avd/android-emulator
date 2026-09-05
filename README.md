@@ -87,6 +87,7 @@ acceleration checks remain enabled. The default still includes the unit-test dat
 Hub/LineageOS boot tests use the separately published LineageOS image releases.
 Including Google's full fixture set increases disk requirements to at least 150 GB.
 
-Mac graphics unit tests use the SDK's own Vulkan loader with ANGLE+SwiftShader
-for a consistent headless software backend. This environment applies only to the
-build/test subprocess; normal SDK users select their own runtime GPU backend.
+Mac Vulkan unit fixtures use the SDK's own loader with ANGLE+SwiftShader for a
+consistent headless software backend. Other tests run without loader-path changes
+so dyld/Crashpad checks keep their normal environment. All test cases still run;
+normal SDK users select their own runtime GPU backend.

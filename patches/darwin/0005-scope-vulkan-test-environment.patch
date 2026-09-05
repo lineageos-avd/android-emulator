@@ -1,0 +1,48 @@
+--- a/android/build/python/aemu/tasks/unit_tests.py
++++ b/android/build/python/aemu/tasks/unit_tests.py
+@@ -84,6 +84,10 @@
+                 "TMPDIR": str(tmpdir),
+             }
+ 
++            if platform.system() == 'Darwin':
++                self._run_macos_test_groups(ctest, env, junit_file)
++                return
++
+             if self.gfxstream:
+                 env["VK_ICD_FILENAMES"] = str(
+                     self.destination / "lib64" / "vulkan" / "vk_swiftshader_icd.json"
+@@ -126,6 +130,34 @@
+                 ).in_directory(self.destination).with_environment(env).run()
+ 
+ 
++    def _run_macos_test_groups(self, ctest, env, junit_file):
++        # Loader-path overrides change dyld crash annotations. Restrict the
++        # headless graphics fixture to Vulkan tests instead of affecting
++        # Crashpad and the rest of the native test suite.
++        graphics = r"^(VulkanTest|VulkanFrameBufferTest)\."
++        graphics_env = dict(env)
++        graphics_env.update({
++            "DYLD_LIBRARY_PATH": ":".join(str(self.destination / path) for path in
++                ["lib64/vulkan", "lib64/gles_angle", "lib64"]),
++            "VK_ICD_FILENAMES": str(self.destination / "lib64/vulkan/vk_swiftshader_icd.json"),
++            "ANDROID_EMU_VK_ICD": "swiftshader",
++            "ANDROID_EMU_HEADLESS": "1",
++            "ANGLE_DEFAULT_PLATFORM": "swiftshader",
++        })
++        groups = [
++            (["-E", graphics], env, junit_file),
++            (["-R", graphics], graphics_env, junit_file.with_name("test_results_vulkan.xml")),
++        ]
++        for selection, environment, report in groups:
++            common = [ctest, "-j", self.jobs, "--timeout", "180"] + selection
++            try:
++                Command(common + ["--output-junit", report.absolute()]).in_directory(
++                    self.destination).with_environment(environment).run()
++            except CommandFailedException:
++                Command(common + ["--rerun-failed", "--output-on-failure"]).in_directory(
++                    self.destination).with_environment(environment).run()
++
++
+ class CoverageReportTask(BuildTask):
+     """Generates the code coverage report. CTestTask needs to run prior to this."""
+ 
