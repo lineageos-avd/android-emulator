@@ -10,6 +10,7 @@ CRT_DLLS = (
 MINIMUM_CRT = (14, 34)
 AMD64 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_AMD64']
 I386 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_I386']
+MAX_EXPORTS = 1_000_000
 SYSTEM_DLLS = set('''advapi32 authz avicap32 avrt bcrypt bluetoothapis bthprops.cpl cfgmgr32 combase comctl32
 comdlg32 crypt32 cryptbase cryptsp d2d1 d3d9 d3d11 d3d12 d3dcompiler_47 dbgcore dbghelp
 dcomp dhcpcsvc dnsapi dwmapi dwrite dxcore dxgi dxva2 fltlib gdi32 gdi32full glu32
@@ -48,7 +49,9 @@ def audit(root):
     for path in sorted(root.rglob('*')):
         if not path.is_file() or path.suffix.lower() not in ('.exe', '.dll'):
             continue
-        with pefile.PE(str(path), fast_load=True) as pe:
+        # Protobuf exports more symbols than pefile's default 8192 limit.
+        # Parse all declared exports within a bound, then verify completeness.
+        with pefile.PE(str(path), fast_load=True, max_symbol_exports=MAX_EXPORTS) as pe:
             machine = pe.FILE_HEADER.Machine
             # Upstream deliberately ships x86 Cygwin e2fsprogs helpers in
             # bin64. Keep their dependency graph separate from x64 QEMU.
@@ -63,7 +66,14 @@ def audit(root):
                 imports.append((entry.dll.decode('ascii').lower(),
                                 [symbol.name if symbol.name else symbol.ordinal for symbol in entry.imports]))
             exports = set()
-            for symbol in getattr(getattr(pe, 'DIRECTORY_ENTRY_EXPORT', None), 'symbols', []):
+            directory = getattr(pe, 'DIRECTORY_ENTRY_EXPORT', None)
+            symbols = getattr(directory, 'symbols', [])
+            if directory and (directory.struct.NumberOfNames > MAX_EXPORTS
+                              or directory.struct.NumberOfFunctions > MAX_EXPORTS
+                              or sum(symbol.name is not None for symbol in symbols)
+                              != directory.struct.NumberOfNames):
+                raise ValueError(f'Export directory was not completely parsed: {path.relative_to(root)}')
+            for symbol in symbols:
                 exports.add(symbol.ordinal)
                 if symbol.name:
                     exports.add(symbol.name)
@@ -71,7 +81,9 @@ def audit(root):
                     forwarded = symbol.forwarder.decode('ascii').rsplit('.', 1)[0].lower()
                     imports.append((forwarded if forwarded.endswith('.dll') else forwarded + '.dll', []))
             entry = {'path': path.relative_to(root).as_posix(), 'machine': machine,
-                     'imports': imports, 'exports': exports}
+                     'imports': imports, 'exports': exports,
+                     'named_exports': directory.struct.NumberOfNames if directory else 0,
+                     'parsed_export_records': len(symbols)}
             binaries.append(entry)
             providers.setdefault((path.name.lower(), machine), []).append(entry)
     if not binaries:
@@ -106,4 +118,6 @@ def audit(root):
                 raise ValueError(f'{provider["path"]} runtime {version} is older than MSVC 14.34')
             runtime.append({'file': provider['path'], 'version': '.'.join(map(str, version))})
     return {'pe_binaries': len(binaries), 'dependency_edges': dependencies, 'vc_runtime': runtime,
+            'export_directories': [{key: binary[key] for key in ('path', 'named_exports', 'parsed_export_records')}
+                                   for binary in binaries if binary['named_exports']],
             'scope': 'PE imports, delay imports, export forwarders, and app-local VC runtime; no guest boot'}

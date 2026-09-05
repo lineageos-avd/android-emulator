@@ -143,7 +143,8 @@ def repackage(args):
         (dist / 'windows-dependencies.json').write_text(json.dumps(dependency_report, indent=2) + '\n', encoding='utf-8')
         with checksums_path.open('w', encoding='utf-8') as output:
             for path in sorted(dist.iterdir()):
-                if path.is_file() and not path.name.startswith('SHA256SUMS'):
+                if (path.is_file() and not path.name.startswith('SHA256SUMS')
+                        and not any(marker in path.name for marker in ('-debug-', '-symbols-', '-python-samples-'))):
                     output.write(f'{sdk_verifier.digest(path)}  {path.name}\n')
     return {'archive': archive.name, 'sha256': sdk_verifier.digest(archive),
             'recipe_commit': provenance['recipe_commit'], 'packaging_commit': args.packaging_commit,
