@@ -1,0 +1,19 @@
+Subject: [PATCH] Give compositor and presentation fixtures the Vulkan test backend
+
+These fixtures use the same Vulkan dispatch as VulkanTest. Without the bundled
+loader and SwiftShader environment, Intel hosts can load an incompatible system
+backend and crash before evaluating their feature requirements. Keep all Vulkan
+fixtures in the existing isolated group; unrelated and Crashpad tests retain the
+normal loader environment. Unsupported swapchain features keep upstream skips.
+
+--- a/android/build/python/aemu/tasks/unit_tests.py
++++ b/android/build/python/aemu/tasks/unit_tests.py
+@@ -137,7 +137,7 @@
+         # Loader-path overrides change dyld crash annotations. Restrict the
+         # headless graphics fixture to Vulkan tests instead of affecting
+         # Crashpad and the rest of the native test suite.
+-        graphics = r"^(VulkanTest|VulkanFrameBufferTest)\."
++        graphics = r"^(VulkanTest|VulkanFrameBufferTest|CompositorVkTest|SwapChainStateVkTest|DisplayVkTest)\."
+         graphics_env = dict(env)
+         graphics_env.update({
+             "DYLD_LIBRARY_PATH": ":".join(str(self.destination / path) for path in
