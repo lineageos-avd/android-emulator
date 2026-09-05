@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import ntpath
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import platform
@@ -46,7 +47,8 @@ def extract_sdk(archive, destination):
             if (not name or '\\' in name or path.is_absolute() or windows.drive
                     or any(part in ('', '.', '..') for part in name.rstrip('/').split('/'))
                     or any(':' in part or part.endswith((' ', '.')) or
-                           PureWindowsPath(part).is_reserved() for part in path.parts)):
+                           (ntpath.isreserved(part) if hasattr(ntpath, 'isreserved')
+                            else PureWindowsPath(part).is_reserved()) for part in path.parts)):
                 raise ValueError(f'Unsafe archive path: {name!r}')
             key = name.rstrip('/').casefold()
             if key in seen:
@@ -125,7 +127,13 @@ def verify(args):
                 'vc_runtime': dependencies['vc_runtime'],
             }
         executable = sdk / ('emulator.exe' if expected_os == 'Windows' else 'emulator')
-        result = subprocess.run([str(executable), '-version'], cwd=extracted,
+        environment = os.environ.copy()
+        search_path = None
+        if expected_os == 'Windows':
+            system = Path(environment['SystemRoot'])
+            search_path = [sdk, sdk / 'lib64', sdk / 'lib64/qt/lib', system / 'System32', system]
+            environment['PATH'] = os.pathsep.join(map(str, search_path))
+        result = subprocess.run([str(executable), '-version'], cwd=sdk, env=environment,
                                 capture_output=True, text=True, errors='replace', timeout=45)
         output = result.stdout + result.stderr
         if result.returncode != 0:
@@ -140,6 +148,7 @@ def verify(args):
                 'zip_entries': entries, 'command': ['emulator', '-version'],
                 'exit_code': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr,
                 'windows_dependencies': windows_dependencies,
+                'windows_search_path': list(map(str, search_path)) if search_path else None,
                 'guest_boot_tested': False}
 
 

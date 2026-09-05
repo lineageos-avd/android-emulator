@@ -82,6 +82,8 @@ def audit(root):
             dependencies.append({'binary': binary['path'], 'dll': library, 'resolution': resolution})
     runtime = []
     for name in CRT_DLLS:
+        if not (root / name).is_file():
+            raise ValueError(f'VC runtime must be next to the SDK entry executable: {name}')
         if name not in providers:
             raise ValueError(f'Required app-local VC runtime missing: {name}')
         for provider in providers[name]:
