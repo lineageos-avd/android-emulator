@@ -130,7 +130,7 @@ jobs:
           pattern: engine-*
           path: dist
           merge-multiple: true
-      - run: python3 scripts/catalog.py --dist dist --tag "$GITHUB_REF_NAME"
+      - run: python3 scripts/catalog.py --dist dist --tag "$GITHUB_REF_NAME" --require-all-targets
       - name: Publish complete preview build
         env:
           GH_TOKEN: ${{ github.token }}

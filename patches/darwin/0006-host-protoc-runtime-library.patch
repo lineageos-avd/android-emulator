@@ -1,0 +1,23 @@
+Subject: [PATCH] Keep standalone host protoc and Abseil in the expected runtime layout
+
+The Darwin cross build runs an ARM64 protoc while compiling Intel targets.
+Its install RPATH searches protobuf/lib64, which already links to the standalone
+build root's lib64 directory. Abseil previously stayed in abseil/absl instead,
+so dyld aborted every protobuf generation command. Set the helper library's
+output directory only in the IN_CROSS_COMPILE standalone project.
+
+--- a/android/third_party/protobuf/CMakeLists.txt
++++ b/android/third_party/protobuf/CMakeLists.txt
+@@ -105,6 +105,12 @@
+ # In the cross compile case we will have to make sure that what symlink the
+ # lib64 directory
+ if(IN_CROSS_COMPILE)
++  # This standalone host-tool build does not inherit the emulator's library
++  # output directory. Keep Abseil in the lib64 directory searched by protoc's
++  # install RPATH and the symlink below; otherwise the built host protoc cannot
++  # run while generating sources for the other architecture.
++  set_target_properties(abseil_dll PROPERTIES LIBRARY_OUTPUT_DIRECTORY
++                                            "${CMAKE_CURRENT_BINARY_DIR}/lib64")
+   execute_process(
+     COMMAND
+       ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_BINARY_DIR}/lib64"
