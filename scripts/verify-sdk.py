@@ -130,7 +130,7 @@ def verify(args):
         environment = os.environ.copy()
         search_path = None
         if expected_os == 'Windows':
-            system = Path(environment['SystemRoot'])
+            system = Path(environment['SYSTEMROOT'])
             search_path = [sdk, sdk / 'lib64', sdk / 'lib64/qt/lib', system / 'System32', system]
             environment['PATH'] = os.pathsep.join(map(str, search_path))
         result = subprocess.run([str(executable), '-version'], cwd=sdk, env=environment,
