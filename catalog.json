@@ -1,4 +1,23 @@
 {
   "schema_version": 1,
-  "engines": []
+  "engines": [
+    {
+      "host_os": "linux",
+      "host_arch": "x86_64",
+      "version": "35.3.8",
+      "url": "https://github.com/lineageos-avd/android-emulator/releases/download/source-35.3.8-preview.1/sdk-repo-linux-emulator-36.1-hub.1.zip",
+      "size": 191826824,
+      "sha256": "95f1eb40caa19fd1b738423b9ba98892abc4d2cb13a96bb831b01ed3bfbdc6ab",
+      "executable": "emulator/emulator"
+    },
+    {
+      "host_os": "macos",
+      "host_arch": "aarch64",
+      "version": "35.3.8",
+      "url": "https://github.com/lineageos-avd/android-emulator/releases/download/source-35.3.8-preview.1/sdk-repo-darwin_aarch64-emulator-36.1-hub.1.zip",
+      "size": 186858832,
+      "sha256": "66fbf4dd7b80915e0340cdd1cbd8be82670a77c71def7a52bb27d880959f146c",
+      "executable": "emulator/emulator"
+    }
+  ]
 }
