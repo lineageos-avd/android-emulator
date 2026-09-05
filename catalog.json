@@ -27,6 +27,15 @@
       "size": 425620016,
       "sha256": "2e8ea31765abf0add1a48750bafdfed860b33a3f36e8584e09b539b854f8afd8",
       "executable": "emulator/emulator.exe"
+    },
+    {
+      "host_os": "macos",
+      "host_arch": "x86_64",
+      "version": "35.3.8",
+      "url": "https://github.com/lineageos-avd/android-emulator/releases/download/source-35.3.8-preview.1/sdk-repo-darwin-emulator-33.zip",
+      "size": 256801856,
+      "sha256": "25fad6a1ce9ff34dd41ca32237aeae41cf18bc4c696beb0db6b5e6f9200420b7",
+      "executable": "emulator/emulator"
     }
   ]
 }
