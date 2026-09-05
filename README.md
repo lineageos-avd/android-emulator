@@ -5,6 +5,14 @@ Build recipes for the open-source Google Android Emulator, pinned to the public
 `9f0811e72acfc46edc39d3d0baedd796f7d03309`. The engine stays upstream-compatible;
 Emulator Hub uses its existing authenticated local gRPC controller and ADB.
 
+The [35.3.8 source preview](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1)
+provides verified SDK packages for **Linux x86_64, Windows x86_64, macOS Intel and
+macOS Apple Silicon**. Hub selects them from the maintained catalog below.
+All four targets passed their upstream unit suites and native packaged executable
+checks. Linux KVM and Apple Silicon HVF also passed LineageOS guest validation;
+Windows WHPX and Intel Mac HVF guest boot remain unverified for this preview.
+Each target keeps its exact source recipe, package provenance and validation record.
+
 ## Build
 
 Use a dedicated directory on a case-sensitive filesystem with at least 100 GB free.
