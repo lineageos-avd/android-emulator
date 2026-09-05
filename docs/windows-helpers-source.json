@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "scope": "The twelve unchanged 32-bit Cygwin filesystem helpers bundled in the Windows x86_64 Google Emulator SDK.",
+  "google_revisions": {
+    "qemu": "9f0811e72acfc46edc39d3d0baedd796f7d03309",
+    "prebuilts/android-emulator-build/common": "5b8a22a34ac998df16d7e3347fe84fbc1fc15735",
+    "prebuilts/android-emulator-build/archive": "9b0bdade8b09267282fb901d21219ab6af013c60"
+  },
+  "historical_setup": {
+    "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/setup.ini",
+    "sha256": "d6cc66b6b1cae17acf56d1340b5ff5ce2e75da4bef1625069a03e3aaff9607d5",
+    "all_google_binary_packages_match_sha512": true,
+    "all_source_packages_match_sha512": true,
+    "transport": "HTTP historical mirror; archived index is retained.",
+    "detached_signature": "Not available at the historical setup.ini.sig URL; no signature verification is claimed."
+  },
+  "binary_source_map": [
+    {
+      "binary": "emulator/bin64/cygblkid-1.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "f7bb2b393ec294106cb26021a8f730f19b6b359110d9481966806b59bb0fe531",
+      "google_binary_package": "libblkid1-2.25.2-1.tar.xz",
+      "google_package_member": "usr/bin/cygblkid-1.dll",
+      "google_package_sha256": "b716e8a716dae63baf262767a6cf3ed00f047d03155a769815614e61c7774993",
+      "historical_package_sha512": "1c01a643106de64a5093ac3e621fb62190f9d30221ca4eac0769aa0dd786fab8212017ff69b61d5f5b3d298fe97f633a96639548a386d27cb5314d847b42504a",
+      "source_package": "util-linux-2.25.2-1-src.tar.xz",
+      "source_sha256": "49ac45eb3f9ca5f871c117106f3bd239555b4477a9d55e0adcea9d5a5f6f926a"
+    },
+    {
+      "binary": "emulator/bin64/cyguuid-1.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "df044ab6e686e985a68fc55aa0351c9812ecfc9eebcf09a9494b2d0fd921e1ab",
+      "google_binary_package": "libuuid1-2.25.2-2.tar.xz",
+      "google_package_member": "usr/bin/cyguuid-1.dll",
+      "google_package_sha256": "24d4eacbdd3e7bf38784a0f6168a0747b4da09c52c2315dcee445f9ed60df279",
+      "historical_package_sha512": "8bb166c4aba876c4d4187923fcaf050c2743b74c384cdd39726683819c216ba49e1cad15cf29784f86d5c8d1d63b0b1f3876ae97f1f09b573086abb92b18a0e4",
+      "source_package": "util-linux-2.25.2-2-src.tar.xz",
+      "source_sha256": "7f86796676b1f5e956750a4e298eab2aacbc6dc3f764c42e13e46fa1cae7ca29"
+    },
+    {
+      "binary": "emulator/bin64/e2fsck.exe",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "c0a1d888276ebf540a0b594f92e3dffb7a82f486753d217e6c1b627dac4bfdce",
+      "google_binary_package": "e2fsprogs-1.42.12-1.tar.xz",
+      "google_package_member": "usr/sbin/e2fsck.exe",
+      "google_package_sha256": "bb19cc2cc8d6bff06d16fe11edb53d2c151824d32eff3a5b460190523f2cd413",
+      "historical_package_sha512": "0d5ef2a625b74e0e8e92e1ff8fcdce15ba67d001dca616d75655730667cffddeb2975efabb8639d5cd6a7317e981dffbff83bcbb0f2fc12cc598eaeb71e9e1d8",
+      "source_package": "e2fsprogs-1.42.12-1-src.tar.xz",
+      "source_sha256": "4c21fe7dddfea4a9cc36baa365935af19b665bb3d103b7226c81c027b4f69e72"
+    },
+    {
+      "binary": "emulator/bin64/resize2fs.exe",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "3fb38a5da2067b28c4efd0b3532aea44a9d4d73024b606fe03395d4521b5a791",
+      "google_binary_package": "e2fsprogs-1.42.12-1.tar.xz",
+      "google_package_member": "usr/sbin/resize2fs.exe",
+      "google_package_sha256": "bb19cc2cc8d6bff06d16fe11edb53d2c151824d32eff3a5b460190523f2cd413",
+      "historical_package_sha512": "0d5ef2a625b74e0e8e92e1ff8fcdce15ba67d001dca616d75655730667cffddeb2975efabb8639d5cd6a7317e981dffbff83bcbb0f2fc12cc598eaeb71e9e1d8",
+      "source_package": "e2fsprogs-1.42.12-1-src.tar.xz",
+      "source_sha256": "4c21fe7dddfea4a9cc36baa365935af19b665bb3d103b7226c81c027b4f69e72"
+    },
+    {
+      "binary": "emulator/bin64/tune2fs.exe",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "1dba6a52b6ebf9575a93c244d6d08b6e5cfef946db32f4ac807a4e284c4928ff",
+      "google_binary_package": "e2fsprogs-1.42.12-1.tar.xz",
+      "google_package_member": "usr/sbin/tune2fs.exe",
+      "google_package_sha256": "bb19cc2cc8d6bff06d16fe11edb53d2c151824d32eff3a5b460190523f2cd413",
+      "historical_package_sha512": "0d5ef2a625b74e0e8e92e1ff8fcdce15ba67d001dca616d75655730667cffddeb2975efabb8639d5cd6a7317e981dffbff83bcbb0f2fc12cc598eaeb71e9e1d8",
+      "source_package": "e2fsprogs-1.42.12-1-src.tar.xz",
+      "source_sha256": "4c21fe7dddfea4a9cc36baa365935af19b665bb3d103b7226c81c027b4f69e72"
+    },
+    {
+      "binary": "emulator/bin64/cygext2fs-2.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "e2d6dfb3196fe9be284b9082ad02723bc6c74923b55d39997cccf40c30c778d7",
+      "google_binary_package": "libext2fs2-1.42.12-2.tar.xz",
+      "google_package_member": "usr/bin/cygext2fs-2.dll",
+      "google_package_sha256": "625ac2f617be7adcd5bc5510a1311441aff1d1a225cdd7d48ec25ac69ab19b98",
+      "historical_package_sha512": "bb0543bb042957e4522496228800e6dab43cb5ccf21bcfe122257a9c9cafcbcf2156fa1862a4d75026f89ea30fb861f476af88ea6e1f638085f3522bdeb541a1",
+      "source_package": "e2fsprogs-1.42.12-2-src.tar.xz",
+      "source_sha256": "5d14c7f75cc317a12a1d65116689e8c02e9d78004635d7633fd7f0a22e2aa22f"
+    },
+    {
+      "binary": "emulator/bin64/cyggcc_s-1.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "535556827321d7fc1eae3b77a3a0ed9c2a5ec3ac72379c4399abd19c75af6805",
+      "google_binary_package": "libgcc1-4.9.3-1.tar.xz",
+      "google_package_member": "usr/bin/cyggcc_s-1.dll",
+      "google_package_sha256": "e63dbad03b9dc2c864be609740f6f04530fbbbe0cc1562ce4e2520a39731733e",
+      "historical_package_sha512": "bcc4bb8f9905220c89a4edbb544e726e3418a68e707d08b40b339917f73dc26d574b591eb5abd492b7efbac5b0a2bd5a9e2896c8d38c18f1827a567bd5303a5a",
+      "source_package": "gcc-4.9.3-1-src.tar.xz",
+      "source_sha256": "bedf686369da31afcf7ffc3c00409f7f42e1a959c23e5914d685c02367b3e713"
+    },
+    {
+      "binary": "emulator/bin64/cygiconv-2.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "64998245adb07d16717fe040235cc75c5270c3d4c77737043c26518cf684a3e8",
+      "google_binary_package": "libiconv2-1.14-3.tar.xz",
+      "google_package_member": "usr/bin/cygiconv-2.dll",
+      "google_package_sha256": "25bde114b1804b98e36a35a7aad31127df8e9eff34be1ba7d5648e6565797eee",
+      "historical_package_sha512": "7753c60799f3c91eda84c5fc09ddca7b7537a3255e287f5f6af6260d64b9b3810f939a76f12c6069ab77ad15d4b0da218bc98af6f10d5d0d898a0858f2373a62",
+      "source_package": "libiconv-1.14-3-src.tar.xz",
+      "source_sha256": "e6114abf9bf83ca64f84cc67234ce81bbb58906b9dedba2b45686b9c34d7522f"
+    },
+    {
+      "binary": "emulator/bin64/cyge2p-2.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "37a60b38d688e9164d4f0abf44b1c156a73d13b02bc75d8d27576bfee683663d",
+      "google_binary_package": "libe2p2-1.42.12-2.tar.xz",
+      "google_package_member": "usr/bin/cyge2p-2.dll",
+      "google_package_sha256": "bb98cee03e749d4d6ce5547bd7c1512f82cab9ac7d544518df28e891b4473f83",
+      "historical_package_sha512": "b562d6b9dacc9516230d08768f3746fc6b24e7ab3c74fa90201b261f80f473a614cd7f9315bececbefd78e19ecff9821789eb2a3dd58f4e823bc63d92cb7877b",
+      "source_package": "e2fsprogs-1.42.12-2-src.tar.xz",
+      "source_sha256": "5d14c7f75cc317a12a1d65116689e8c02e9d78004635d7633fd7f0a22e2aa22f"
+    },
+    {
+      "binary": "emulator/bin64/cygintl-8.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "0866869a672d77ea9a90558d3bc8e53581bb033c4e73352763d7eb23ed0baa4a",
+      "google_binary_package": "libintl8-0.19.4-1.tar.xz",
+      "google_package_member": "usr/bin/cygintl-8.dll",
+      "google_package_sha256": "0591541179d13615c88385819f8c11724fb6bae308d8e4480d12c21b9b708d72",
+      "historical_package_sha512": "b2ec7d706482042ff631a1d10593e816be35f6bad74882bb033a73b62456e28034262f23989f08e8133cc05466438c38ad3814645c8c3b09b206d304a14de237",
+      "source_package": "gettext-0.19.4-1-src.tar.xz",
+      "source_sha256": "3685a1a403e7d82815a2fe5468ba572a690346b1245bd7330a279a7a494b0ec2"
+    },
+    {
+      "binary": "emulator/bin64/cygcom_err-2.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "db9462f42f5b0ead4db400153a16db3712077039538f4b2896b472b58ee4990d",
+      "google_binary_package": "libcom_err2-1.42.12-2.tar.xz",
+      "google_package_member": "usr/bin/cygcom_err-2.dll",
+      "google_package_sha256": "81a1d28d0d9c60594997d437e4cf4bf628337a277225c691dacb834874ace2ff",
+      "historical_package_sha512": "546b8f3bb3689ae9f9b82ca17ba825e9cfbd4139505111fe367c7a63fcc15a4eaffc5c5998ccf597bbdb9abbdf0722b28a0e2b2a758ce1ebcb0fc5dca63f5460",
+      "source_package": "e2fsprogs-1.42.12-2-src.tar.xz",
+      "source_sha256": "5d14c7f75cc317a12a1d65116689e8c02e9d78004635d7633fd7f0a22e2aa22f"
+    },
+    {
+      "binary": "emulator/bin64/cygwin1.dll",
+      "machine": "IMAGE_FILE_MACHINE_I386",
+      "sha256": "634f28d02752599bfbc0b5f107ec84b37dc3b3628ed6349c4cb34fadac9d72f6",
+      "google_binary_package": "cygwin-2.0.4-1.tar.xz",
+      "google_package_member": "usr/bin/cygwin1.dll",
+      "google_package_sha256": "d20f4da694fc22c24642c4ce22aa3496254e7f360e7e65650e185b8a571855a0",
+      "historical_package_sha512": "b0a65cf9d81011939502ea5ab41fd3a29702f75771e9654a2fbd07b56d914c6e071931b2f12d8fd92b63a32e8558b6f765d4477d774ee84df880fc95d6826db2",
+      "source_package": "cygwin-2.0.4-1-src.tar.xz",
+      "source_sha256": "4dd1f6b9d0f462a9e60b62fa349ed494e6384c9320b4e02b4b20d1c62e22add7"
+    }
+  ],
+  "source_packages": {
+    "util-linux-2.25.2-1-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/util-linux/util-linux-2.25.2-1-src.tar.xz",
+      "size": 3710064,
+      "sha512": "7287774a35283ed234b201ded988550947d72b9ada00eadb96e20c09af57f6289ce48d6c461beaad21fedc7438d43970b4d718710df80c68f3d84a2b409c44ca",
+      "source_path": "x86/release/util-linux/util-linux-2.25.2-1-src.tar.xz",
+      "sha256": "49ac45eb3f9ca5f871c117106f3bd239555b4477a9d55e0adcea9d5a5f6f926a",
+      "member_count": 11,
+      "recipe_members": [
+        "util-linux-2.25.2-1.src/2.24.2-agetty.patch",
+        "util-linux-2.25.2-1.src/2.24.2-libblkid-topology.patch",
+        "util-linux-2.25.2-1.src/2.24.2-libintl.patch",
+        "util-linux-2.25.2-1.src/2.25.1-cygwin-include.patch",
+        "util-linux-2.25.2-1.src/2.25.1-ipc-utils.patch",
+        "util-linux-2.25.2-1.src/2.25.1-lslogins.patch",
+        "util-linux-2.25.2-1.src/2.25.1-scanf-ms.patch",
+        "util-linux-2.25.2-1.src/2.26-libblkid-escape.patch",
+        "util-linux-2.25.2-1.src/util-linux.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains libblkid1 binary package only.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "util-linux-2.25.2-1.src/util-linux-2.25.2.tar.xz"
+      ]
+    },
+    "util-linux-2.25.2-2-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/util-linux/util-linux-2.25.2-2-src.tar.xz",
+      "size": 3710056,
+      "sha512": "9f3814e9b13b59982a91622d5f5add2ef97517eff9d161ef7bcf6a4888c24c180ef162d7955fdc2c56caee6196af946fa6acd28946d9c27c03193d54fd4f26b0",
+      "source_path": "x86/release/util-linux/util-linux-2.25.2-2-src.tar.xz",
+      "sha256": "7f86796676b1f5e956750a4e298eab2aacbc6dc3f764c42e13e46fa1cae7ca29",
+      "member_count": 11,
+      "recipe_members": [
+        "util-linux-2.25.2-2.src/2.24.2-agetty.patch",
+        "util-linux-2.25.2-2.src/2.24.2-libblkid-topology.patch",
+        "util-linux-2.25.2-2.src/2.24.2-libintl.patch",
+        "util-linux-2.25.2-2.src/2.25.1-cygwin-include.patch",
+        "util-linux-2.25.2-2.src/2.25.1-ipc-utils.patch",
+        "util-linux-2.25.2-2.src/2.25.1-lslogins.patch",
+        "util-linux-2.25.2-2.src/2.25.1-scanf-ms.patch",
+        "util-linux-2.25.2-2.src/2.26-libblkid-escape.patch",
+        "util-linux-2.25.2-2.src/util-linux.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains libuuid1 binary package only.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "util-linux-2.25.2-2.src/util-linux-2.25.2.tar.xz"
+      ]
+    },
+    "e2fsprogs-1.42.12-1-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/e2fsprogs/e2fsprogs-1.42.12-1-src.tar.xz",
+      "size": 6374800,
+      "sha512": "2c2fa5b0edf870ed015cabc8ec67fa2f98cce6a658bf075a81f0fdadaf4d27bbbcfda4388b2433bf52758c2de2297b9b08af2b129277a681a42862573b467700",
+      "source_path": "x86/release/e2fsprogs/e2fsprogs-1.42.12-1-src.tar.xz",
+      "sha256": "4c21fe7dddfea4a9cc36baa365935af19b665bb3d103b7226c81c027b4f69e72",
+      "member_count": 7,
+      "recipe_members": [
+        "e2fsprogs-1.42.12-1.src/1.41.6-shared-libs.patch",
+        "e2fsprogs-1.42.12-1.src/1.42.6-cygwin-getsize.patch",
+        "e2fsprogs-1.42.12-1.src/e2fsprogs-1.40.4-sb_feature_check_ignore.patch",
+        "e2fsprogs-1.42.12-1.src/e2fsprogs-1.42.12-use-after-free-fix.patch",
+        "e2fsprogs-1.42.12-1.src/e2fsprogs.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains Windows binary package only; e2fsprogs 1.42.13 source and patches are for a different version.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "e2fsprogs-1.42.12-1.src/e2fsprogs-1.42.12.tar.gz"
+      ]
+    },
+    "e2fsprogs-1.42.12-2-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/e2fsprogs/e2fsprogs-1.42.12-2-src.tar.xz",
+      "size": 6376484,
+      "sha512": "ed1b9830d86bb33f10d616571dc64b9f5d98ba7c9efb07154f93f19af495e349886b9fc0dfa80e934b82a461411bce7ab63a8b20ddb4d4f700cc22d10a71bfb2",
+      "source_path": "x86/release/e2fsprogs/e2fsprogs-1.42.12-2-src.tar.xz",
+      "sha256": "5d14c7f75cc317a12a1d65116689e8c02e9d78004635d7633fd7f0a22e2aa22f",
+      "member_count": 10,
+      "recipe_members": [
+        "e2fsprogs-1.42.12-2.src/1.41.6-shared-libs.patch",
+        "e2fsprogs-1.42.12-2.src/1.42.6-cygwin-getsize.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.40.4-sb_feature_check_ignore.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.42.12-closefs-cve.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.42.12-dumpe2fs-segfault.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.42.12-resize2fs-fsck.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.42.12-use-after-free-fix.patch",
+        "e2fsprogs-1.42.12-2.src/e2fsprogs.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains Windows e2fs DLL binary packages only.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "e2fsprogs-1.42.12-2.src/e2fsprogs-1.42.12.tar.gz"
+      ]
+    },
+    "gcc-4.9.3-1-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/gcc/gcc-4.9.3-1-src.tar.xz",
+      "size": 89929992,
+      "sha512": "18e61ea73ac576bcfe8c5cc98a6508cff32002225f0951e6556aedfeab5340f81b32a4df23298ef4e233602d86ac550c589554a4a62d8671cccc3af40ce5d7dd",
+      "source_path": "x86/release/gcc/gcc-4.9.3-1-src.tar.xz",
+      "sha256": "bedf686369da31afcf7ffc3c00409f7f42e1a959c23e5914d685c02367b3e713",
+      "member_count": 29,
+      "recipe_members": [
+        "gcc-4.9.3-1.src/0001-share-mingw-fset-stack-executable-with-cygwin.patch",
+        "gcc-4.9.3-1.src/0002-boehm-gc-for-cygwin.patch",
+        "gcc-4.9.3-1.src/0003-AWT-Font-fix-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0004-Cygwin-ioctl-may-emit-EINVAL.patch",
+        "gcc-4.9.3-1.src/0005-use-avoid-version-if-not-tracking-SO-version.patch",
+        "gcc-4.9.3-1.src/0006-cygwin-uses-cyg-library-prefix.patch",
+        "gcc-4.9.3-1.src/0007-bump-libgcj-version.patch",
+        "gcc-4.9.3-1.src/0008-libatomic-libtool-fixes-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0009-support-64bit-cygwin-too.patch",
+        "gcc-4.9.3-1.src/0010-Avoid-installing-libffi.patch",
+        "gcc-4.9.3-1.src/0011-libitm-libtool-fixes-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0012-Cygwin-uses-sysv-ABI-on-x86_64.patch",
+        "gcc-4.9.3-1.src/0013-Do-not-version-lto-plugin-on-cygwin-mingw.patch",
+        "gcc-4.9.3-1.src/0014-add-dummy-pthread-tsaware-and-large-address-aware-fo.patch",
+        "gcc-4.9.3-1.src/0015-handle-dllimport-properly-in-medium-model.patch",
+        "gcc-4.9.3-1.src/0016-skip-test-for-cygwin-mingw.patch",
+        "gcc-4.9.3-1.src/0017-64bit-Cygwin-uses-SEH.patch",
+        "gcc-4.9.3-1.src/0018-define-RTS_CONTROL_ENABLE-and-DTR_CONTROL_ENABLE-for.patch",
+        "gcc-4.9.3-1.src/0019-fix-some-implicit-declaration-warnings.patch",
+        "gcc-4.9.3-1.src/0020-fix-gnat-DLL-prefix-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0021-__cxa-atexit-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0022-prevent-modules-from-being-unloaded-before-their-dto.patch",
+        "gcc-4.9.3-1.src/0023-Attempt-to-fix-dw2-unwinder-for-Cygwin.patch",
+        "gcc-4.9.3-1.src/0024-Restore-compile-mode-pthread.patch",
+        "gcc-4.9.3-1.src/0025-fix-missing-cygwin.opt.patch",
+        "gcc-4.9.3-1.src/4.0-latest-gcc-runtimes.patch",
+        "gcc-4.9.3-1.src/gcc.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains libgcc1 binary package only.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "gcc-4.9.3-1.src/gcc-4.9.3.tar.bz2"
+      ]
+    },
+    "libiconv-1.14-3-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/libiconv/libiconv-1.14-3-src.tar.xz",
+      "size": 4400352,
+      "sha512": "efa7429c9cd2e4135dd491817fef9289a50aede4027b1d73b70a2393b3b9eeac54bca0e54691a5d97a435ec5d366225b458313415c90653e05931ca01c9f2349",
+      "source_path": "x86/release/libiconv/libiconv-1.14-3-src.tar.xz",
+      "sha256": "e6114abf9bf83ca64f84cc67234ce81bbb58906b9dedba2b45686b9c34d7522f",
+      "member_count": 7,
+      "recipe_members": [
+        "libiconv-1.14-3.src/1.14-aliases.patch",
+        "libiconv-1.14-3.src/1.14-cross-install.patch",
+        "libiconv-1.14-3.src/1.14-reloc.patch",
+        "libiconv-1.14-3.src/1.14-wchar.patch",
+        "libiconv-1.14-3.src/libiconv.cygport"
+      ],
+      "base_archive_coverage": "Partial: upstream libiconv-1.14.tar.gz exists in base; Cygwin release 3 recipe and patches are absent.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "libiconv-1.14-3.src/libiconv-1.14.tar.gz"
+      ]
+    },
+    "gettext-0.19.4-1-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/gettext/gettext-0.19.4-1-src.tar.xz",
+      "size": 17346968,
+      "sha512": "831478334eedc062a1ec2a356fa134750ef92f5174d91cb19450aad64421f3605b1cc7586b3a877459454d9cd2447299e7c8ab09ad1c730554a72ecdd38d1377",
+      "source_path": "x86/release/gettext/gettext-0.19.4-1-src.tar.xz",
+      "sha256": "3685a1a403e7d82815a2fe5468ba572a690346b1245bd7330a279a7a494b0ec2",
+      "member_count": 9,
+      "recipe_members": [
+        "gettext-0.19.4-1.src/0.18.1.1-autopoint-V.patch",
+        "gettext-0.19.4-1.src/0.18.1.1-no-woe32dll.patch",
+        "gettext-0.19.4-1.src/0.19.3-localename.patch",
+        "gettext-0.19.4-1.src/0.19.3-tests-cygwin.patch",
+        "gettext-0.19.4-1.src/gettext.cygport"
+      ],
+      "base_archive_coverage": "Absent: base contains libintl8 binary package; gettext-0.19.1.tar.xz is a different upstream version.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "gettext-0.19.4-1.src/gettext-0.19.4.tar.gz"
+      ]
+    },
+    "cygwin-2.0.4-1-src.tar.xz": {
+      "url": "http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/2015/07/14/011012/x86/release/cygwin/cygwin-2.0.4-1-src.tar.xz",
+      "size": 12825996,
+      "sha512": "82d9bd54e6c1372b448249fbd2627b6a88ad69a63b4a35a83e9fd7a5f5042ff980bef04fdc9b984379f17d1be6d8eb6bc20ffbee8d4449aeddaf6a8504d46f1c",
+      "source_path": "x86/release/cygwin/cygwin-2.0.4-1-src.tar.xz",
+      "sha256": "4dd1f6b9d0f462a9e60b62fa349ed494e6384c9320b4e02b4b20d1c62e22add7",
+      "member_count": 4,
+      "recipe_members": [
+        "cygwin-2.0.4-1.src/cygwin-2.0.4-1.cygwin.patch",
+        "cygwin-2.0.4-1.src/cygwin.cygport"
+      ],
+      "base_archive_coverage": "Absent: cygwin-2.0.4-1.tar.xz in base is the binary package and documentation.",
+      "supplement_coverage": "Complete original Cygwin source package with upstream archive, recipe and patches.",
+      "upstream_archive_members": [
+        "cygwin-2.0.4-1.src/newlib-cygwin-2.0.4.tar.bz2"
+      ]
+    }
+  },
+  "cygwin_recipe_git_pin": {
+    "repository": "https://cygwin.com/git/newlib-cygwin.git",
+    "tag": "cygwin-2_0_4-release",
+    "tag_object": "5892a323e529c755e9ffa5b9e48348782ea1a477",
+    "commit": "6261fb30a9780fae87d631c1da4d77efa43fe329",
+    "recipe": "recipes/cygwin-2.0.4-1/cygwin.cygport"
+  },
+  "verification_scope": "Binary bytes match Google pinned packages; binary and source packages match the same historical Cygwin index and recipes. These binaries were not rebuilt and byte-for-byte rebuild reproducibility is not claimed.",
+  "existing_release_assets_changed": false
+}
