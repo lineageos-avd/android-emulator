@@ -65,14 +65,37 @@ if ($null -eq $toolset -or -not (Test-PinnedAtl $toolset)) {
 }
 if (-not (Test-Path -LiteralPath $vcvars -PathType Leaf)) { throw "Missing developer environment script: $vcvars" }
 
+$runtimeNames = @('concrt140.dll', 'msvcp140.dll', 'msvcp140_1.dll', 'msvcp140_2.dll',
+    'msvcp140_atomic_wait.dll', 'msvcp140_codecvt_ids.dll', 'vccorlib140.dll',
+    'vcruntime140.dll', 'vcruntime140_1.dll')
+$runtimeCandidates = @(Get-ChildItem -Path (Join-Path $installation 'VC\Redist\MSVC\*\x64\Microsoft.VC*.CRT') -Directory |
+    ForEach-Object {
+        $directory = $_
+        $versions = @()
+        foreach ($name in $runtimeNames) {
+            $path = Join-Path $directory.FullName $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
+            $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($path)
+            $version = [version]::new($info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart, $info.FilePrivatePart)
+            if ($version -lt [version]'14.34.0.0') { return }
+            $versions += $version
+        }
+        [pscustomobject]@{ Directory = $directory.FullName; Version = ($versions | Sort-Object | Select-Object -First 1) }
+    } | Sort-Object Version)
+if ($runtimeCandidates.Count -eq 0) { throw 'Visual Studio has no complete x64 redistributable >= MSVC 14.34.' }
+$runtime = $runtimeCandidates[0]
+$env:EMULATOR_VC_REDIST_DIR = $runtime.Directory
+
 $env:EMULATOR_MSVC_TOOLSET = $toolsetFamily
 $env:EMULATOR_MSVC_FULL_VERSION = $toolset.Name
 if ($env:GITHUB_ENV) {
     "EMULATOR_MSVC_TOOLSET=$toolsetFamily" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     "EMULATOR_MSVC_FULL_VERSION=$($toolset.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    "EMULATOR_VC_REDIST_DIR=$($runtime.Directory)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 }
 Write-Host "Pinned MSVC: $($toolset.FullName)"
 Write-Host "Upstream vcvars selector: -vcvars_ver=$toolsetFamily"
+Write-Host "App-local MSVC runtime: $($runtime.Directory) (at least $($runtime.Version))"
 
 if ($Source) {
     $sourceRoot = (Resolve-Path -LiteralPath $Source).Path

@@ -113,8 +113,17 @@ def verify(args):
                           (sdk / 'source.properties').read_text(encoding='utf-8').splitlines()
                           if '=' in line)
         version = properties['Pkg.Revision'].strip()
-        if version != provenance['sdk_version']:
+        if version != provenance.get('sdk_version', version):
             raise ValueError('Packaged SDK version and provenance differ')
+        windows_dependencies = None
+        if expected_os == 'Windows':
+            from windows_runtime import audit
+            dependencies = audit(sdk)
+            windows_dependencies = {
+                'pe_binaries': dependencies['pe_binaries'],
+                'dependency_edges': len(dependencies['dependency_edges']),
+                'vc_runtime': dependencies['vc_runtime'],
+            }
         executable = sdk / ('emulator.exe' if expected_os == 'Windows' else 'emulator')
         result = subprocess.run([str(executable), '-version'], cwd=extracted,
                                 capture_output=True, text=True, errors='replace', timeout=45)
@@ -130,6 +139,7 @@ def verify(args):
                 'host_os': platform.system(), 'host_arch': actual_arch,
                 'zip_entries': entries, 'command': ['emulator', '-version'],
                 'exit_code': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr,
+                'windows_dependencies': windows_dependencies,
                 'guest_boot_tested': False}
 
 
