@@ -42,6 +42,9 @@ def main():
     command += ['--target', args.target, '--out', str(output),
                 '--dist', str(dist), '--sdk_build_number', args.build_number,
                 '--config', 'release', '--crash', 'none', '--task-disable', 'clean',
+                # Auxiliary upstream VNC integration-runner ZIP is not an SDK artifact.
+                # CTest and acceleration checks still run unchanged.
+                '--task-disable', 'zipintegrationtests',
                 '--test_jobs', str(min(args.jobs, 8))]
     if host == 'linux':
         command += ['--cmake_option', 'CMAKE_SKIP_BUILD_RPATH=ON',
