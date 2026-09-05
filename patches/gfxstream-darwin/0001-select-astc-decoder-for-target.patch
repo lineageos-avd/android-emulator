@@ -1,0 +1,13 @@
+--- a/host/compressedTextureFormats/CMakeLists.txt
++++ b/host/compressedTextureFormats/CMakeLists.txt
+@@ -14,7 +14,9 @@
+     gfxstream_etc)
+ 
+ if(ASTC_CPU_DECODING)
+-    if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64")
++    # A cross build must select the decoder for the target, not the build host.
++    if((DEFINED ANDROID_TARGET_TAG AND ANDROID_TARGET_TAG MATCHES "(aarch64|arm64)$") OR
++       (NOT DEFINED ANDROID_TARGET_TAG AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$"))
+         target_link_libraries(gfxstream-compressedTextures PRIVATE astcdec-native-static)
+     else()
+         target_link_libraries(gfxstream-compressedTextures PRIVATE astcdec-avx2-static)
