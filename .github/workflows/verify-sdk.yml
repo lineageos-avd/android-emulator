@@ -3,9 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: Completed source build run containing engine-windows-x86_64
+        description: Completed source build run; leave empty to inspect the installed Microsoft runtime
         type: string
-        required: true
+        required: false
+        default: ''
 permissions:
   actions: read
   contents: read
@@ -19,7 +20,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install the pinned PE inspection dependency
+        run: python -m pip install --require-hashes -r scripts/requirements-windows-qa.txt
+      - name: Inspect the installed compatible Microsoft runtime
+        if: inputs.run_id == ''
+        shell: pwsh
+        run: |
+          $parseErrors = $null
+          $parseTokens = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/setup-windows.ps1), [ref]$parseTokens, [ref]$parseErrors)
+          if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          @'
+          import importlib.util, json, pathlib
+          spec = importlib.util.spec_from_file_location('packager', 'scripts/repackage-windows-runtime.py')
+          import sys
+          sys.path.insert(0, 'scripts')
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          directory = module.find_redist()
+          record = {'status': 'passed', 'directory': str(directory), 'signatures': module.signatures(directory), **module.audit(directory)}
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/runtime-inspection.json').write_text(json.dumps(record, indent=2))
+          print(json.dumps({'directory': str(directory), 'runtime': record['vc_runtime']}, indent=2))
+          '@ | python -
       - name: Validate the producing workflow and download its immutable artifact
+        if: inputs.run_id != ''
         shell: pwsh
         env:
           BUILD_RUN_ID: ${{ inputs.run_id }}
@@ -43,12 +68,27 @@ jobs:
               env.write('EXPECTED_RECIPE_COMMIT=' + run['head_sha'] + '\n')
           subprocess.run(['gh', 'run', 'download', run_id, '--repo', repo, '--name', 'engine-windows-x86_64', '--dir', 'dist'], check=True)
           '@ | python -
+      - name: Package compatible signed Microsoft runtime files
+        if: inputs.run_id != ''
+        shell: pwsh
+        env:
+          PACKAGING_COMMIT: ${{ github.sha }}
+        run: python scripts/repackage-windows-runtime.py --dist dist --expected-recipe-commit "$env:EXPECTED_RECIPE_COMMIT" --packaging-commit "$env:PACKAGING_COMMIT"
       - name: Verify SHA256 and run the extracted Windows executable
+        if: inputs.run_id != ''
         shell: pwsh
         run: python scripts/verify-sdk.py --dist dist --target windows-x86_64 --output evidence/sdk-verification-windows-x86_64.json --expected-recipe-commit "$env:EXPECTED_RECIPE_COMMIT"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: sdk-verification-windows-x86_64
-          path: evidence/*.json
+          path: |
+            evidence/*.json
+            dist/windows-dependencies.json
           if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: inputs.run_id != ''
+        with:
+          name: engine-windows-x86_64-verified
+          path: dist/*
+          if-no-files-found: error

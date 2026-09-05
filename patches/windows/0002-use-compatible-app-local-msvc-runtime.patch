@@ -1,0 +1,54 @@
+diff --git a/android/build/cmake/config/emu-msvc-config.cmake b/android/build/cmake/config/emu-msvc-config.cmake
+--- a/android/build/cmake/config/emu-msvc-config.cmake
++++ b/android/build/cmake/config/emu-msvc-config.cmake
+@@ -9,10 +9,12 @@
+ # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ # specific language governing permissions and limitations under the License.
+ 
+-get_filename_component(
+-  PREBUILT_ROOT
+-  "${ANDROID_QEMU2_TOP_DIR}/../../prebuilts/android-emulator-build/common/msvc/"
+-  ABSOLUTE)
++# The pinned prebuilt CRT is 14.28, older than the selected 14.34 toolset.
++# setup-windows.ps1 validates a complete compatible Microsoft redist folder.
++if("$ENV{EMULATOR_VC_REDIST_DIR}" STREQUAL "")
++  message(FATAL_ERROR "Run scripts/setup-windows.ps1 to select EMULATOR_VC_REDIST_DIR")
++endif()
++file(TO_CMAKE_PATH "$ENV{EMULATOR_VC_REDIST_DIR}" MSVC_REDIST_ROOT)
+ set(MSVC_FOUND TRUE)
+ set(MSVC_REDIST_DLL
+ concrt140.dll
+@@ -27,15 +29,18 @@
+ )
+ set(MSVC_DEPENDENCIES "")
+ foreach(DEP ${MSVC_REDIST_DLL})
+-    list(APPEND MSVC_DEPENDENCIES "${PREBUILT_ROOT}/2019/${DEP}>./${DEP}")
++    if(NOT EXISTS "${MSVC_REDIST_ROOT}/${DEP}")
++        message(FATAL_ERROR "Missing Microsoft redistributable: ${MSVC_REDIST_ROOT}/${DEP}")
++    endif()
++    list(APPEND MSVC_DEPENDENCIES "${MSVC_REDIST_ROOT}/${DEP}>./${DEP}")
+ endforeach()
+ set(PACKAGE_EXPORT "MSVC_DEPENDENCIES;MSVC_FOUND")
+ android_license(
+   TARGET MSVC_DEPENDENCIES
+   LIBNAME vcredist
+   EXECUTABLES ${MSVC_REDIST_DLL}
+-  URL "https://docs.microsoft.com/en-us/visualstudio/productinfo/2017-redistribution-vs"
+-  SPDX "2017-redistribution-vs"
++  URL "https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution"
++  SPDX "LicenseRef-Visual-Studio-2022-Redist"
+   LICENSE
+-    "https://marketplace.visualstudio.com/items/VisualStudioProductTeam.VisualStudioProjectSystemExtensibilityPreview/license"
+-  LOCAL "${ANDROID_QEMU2_TOP_DIR}/LICENSES/LICENSE.VSREDIST")
++    "https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/"
++  LOCAL "${ANDROID_QEMU2_TOP_DIR}/LICENSES/LICENSE.VSREDIST")
+diff --git a/LICENSES/LICENSE.VSREDIST b/LICENSES/LICENSE.VSREDIST
+--- a/LICENSES/LICENSE.VSREDIST
++++ b/LICENSES/LICENSE.VSREDIST
+@@ -1,2 +1,4 @@
+-The detailed license can be obtained here: https://docs.microsoft.com/en-us/visualstudio/productinfo/2017-redistribution-vs
+-Local deployment is allowed as per https://docs.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=vs-2017
++Microsoft Visual C++ Runtime, Copyright Microsoft Corporation.
++The runtime DLLs are unmodified files from the Visual Studio 2022 VC/Redist directory.
++License terms: https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/
++Distributable code list: https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution
