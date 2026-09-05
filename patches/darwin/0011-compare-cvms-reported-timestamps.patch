@@ -1,0 +1,74 @@
+Subject: [PATCH] Compare CVMS timestamps with the actual dyld record
+
+macOS 15 Intel reports zero imageFileModDate for generated CVMS OpenCL modules
+that have been unlinked after loading. Current Crashpad no longer assumes
+these modules have nonzero timestamps. Keep the old reader API and all normal
+filesystem timestamp checks, but compare CVMS values with the loader's actual
+metadata. For the child case, transmit its own dyld value over the existing
+verification pipe. No process-reader behavior or test cases are disabled.
+
+Reference: https://chromium.googlesource.com/crashpad/crashpad/+/84f5ff464554f6ce66d6fe9562ae9a3ad2266381/snapshot/mac/mach_o_image_segment_reader.cc
+
+--- a/android/third_party/crashpad/snapshot/mac/process_reader_mac_test.cc
++++ b/android/third_party/crashpad/snapshot/mac/process_reader_mac_test.cc
+@@ -875,7 +875,13 @@
+       if (!expect_timestamp) {
+         EXPECT_EQ(modules[index].timestamp, 0);
+       } else {
+-        EXPECT_NE(modules[index].timestamp, 0);
++        // CVMS objects are unlinked after loading, and newer dyld may report
++        // no timestamp. Compare its actual field rather than assuming nonzero.
++        const dyld_all_image_infos* image_infos = DyldGetAllImageInfos();
++        ASSERT_LT(index, image_infos->infoArrayCount);
++        EXPECT_EQ(modules[index].timestamp,
++                  static_cast<time_t>(
++                      image_infos->infoArray[index].imageFileModDate));
+       }
+       found_cl_kernels = true;
+     } else {
+@@ -952,6 +958,9 @@
+       mach_vm_address_t expect_address;
+       CheckedReadFileExactly(
+           read_handle, &expect_address, sizeof(expect_address));
++      time_t reported_timestamp;
++      CheckedReadFileExactly(
++          read_handle, &reported_timestamp, sizeof(reported_timestamp));
+       ASSERT_TRUE(modules[index].reader);
+       EXPECT_EQ(modules[index].reader->Address(), expect_address);
+ 
+@@ -970,7 +979,9 @@
+         if (!expect_timestamp) {
+           EXPECT_EQ(modules[index].timestamp, 0);
+         } else {
+-          EXPECT_NE(modules[index].timestamp, 0);
++          // Verify the child's reported dyld value, including an absent CVMS
++          // timestamp, independently of the cross-process memory reader.
++          EXPECT_EQ(modules[index].timestamp, reported_timestamp);
+         }
+         found_cl_kernels = true;
+       } else {
+@@ -1003,11 +1014,15 @@
+     for (size_t index = 0; index < write_image_count; ++index) {
+       const char* dyld_image_name;
+       mach_vm_address_t dyld_image_address;
++      time_t dyld_image_timestamp = 0;
+ 
+       if (index < dyld_image_count) {
+         dyld_image_name = _dyld_get_image_name(index);
+         dyld_image_address =
+             FromPointerCast<mach_vm_address_t>(_dyld_get_image_header(index));
++        ASSERT_LT(index, dyld_image_infos->infoArrayCount);
++        dyld_image_timestamp = static_cast<time_t>(
++            dyld_image_infos->infoArray[index].imageFileModDate);
+       } else {
+         dyld_image_name = kDyldPath;
+         dyld_image_address = FromPointerCast<mach_vm_address_t>(
+@@ -1024,6 +1039,8 @@
+ 
+       CheckedWriteFile(
+           write_handle, &dyld_image_address, sizeof(dyld_image_address));
++      CheckedWriteFile(
++          write_handle, &dyld_image_timestamp, sizeof(dyld_image_timestamp));
+     }
+ 
+     // Wait for the parent to signal that it’s OK to exit by closing its end of
