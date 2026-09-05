@@ -8,6 +8,8 @@ CRT_DLLS = (
     'vcruntime140.dll', 'vcruntime140_1.dll',
 )
 MINIMUM_CRT = (14, 34)
+AMD64 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_AMD64']
+I386 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_I386']
 SYSTEM_DLLS = set('''advapi32 avicap32 avrt bcrypt cfgmgr32 combase comctl32
 comdlg32 crypt32 cryptbase cryptsp d3d9 d3d11 d3d12 d3dcompiler_47 dbgcore dbghelp
 dcomp dhcpcsvc dnsapi dwmapi dwrite dxcore dxgi dxva2 fltlib gdi32 gdi32full glu32
@@ -30,6 +32,11 @@ def version_bytes(data):
                 fixed.FileVersionLS >> 16, fixed.FileVersionLS & 65535)
 
 
+def machine_bytes(data):
+    with pefile.PE(data=data, fast_load=True) as pe:
+        return pe.FILE_HEADER.Machine
+
+
 def system_library(name):
     return name in SYSTEM_DLLS or name.startswith(('api-ms-win-', 'ext-ms-win-'))
 
@@ -42,8 +49,11 @@ def audit(root):
         if not path.is_file() or path.suffix.lower() not in ('.exe', '.dll'):
             continue
         with pefile.PE(str(path), fast_load=True) as pe:
-            if pe.FILE_HEADER.Machine != pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_AMD64']:
-                raise ValueError(f'Unexpected non-x64 PE: {path.relative_to(root)}')
+            machine = pe.FILE_HEADER.Machine
+            # Upstream deliberately ships x86 Cygwin e2fsprogs helpers in
+            # bin64. Keep their dependency graph separate from x64 QEMU.
+            if machine not in (AMD64, I386):
+                raise ValueError(f'Unsupported PE architecture: {path.relative_to(root)}')
             pe.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY[name] for name in (
                 'IMAGE_DIRECTORY_ENTRY_IMPORT', 'IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT',
                 'IMAGE_DIRECTORY_ENTRY_EXPORT')])
@@ -60,15 +70,16 @@ def audit(root):
                 if symbol.forwarder:
                     forwarded = symbol.forwarder.decode('ascii').rsplit('.', 1)[0].lower()
                     imports.append((forwarded if forwarded.endswith('.dll') else forwarded + '.dll', []))
-            entry = {'path': path.relative_to(root).as_posix(), 'imports': imports, 'exports': exports}
+            entry = {'path': path.relative_to(root).as_posix(), 'machine': machine,
+                     'imports': imports, 'exports': exports}
             binaries.append(entry)
-            providers.setdefault(path.name.lower(), []).append(entry)
+            providers.setdefault((path.name.lower(), machine), []).append(entry)
     if not binaries:
         raise ValueError('SDK contains no PE binaries')
     dependencies = []
     for binary in binaries:
         for library, symbols in binary['imports']:
-            candidates = providers.get(library, [])
+            candidates = providers.get((library, binary['machine']), [])
             if candidates:
                 available = set().union(*(candidate['exports'] for candidate in candidates))
                 missing = [symbol for symbol in symbols if symbol not in available]
@@ -79,14 +90,17 @@ def audit(root):
                 resolution = 'windows-system-or-api-set'
             else:
                 raise ValueError(f'Unbundled non-system dependency: {binary["path"]} -> {library}')
-            dependencies.append({'binary': binary['path'], 'dll': library, 'resolution': resolution})
+            dependencies.append({'binary': binary['path'], 'dll': library, 'resolution': resolution,
+                                 'architecture': 'x86_64' if binary['machine'] == AMD64 else 'x86'})
     runtime = []
     for name in CRT_DLLS:
         if not (root / name).is_file():
             raise ValueError(f'VC runtime must be next to the SDK entry executable: {name}')
-        if name not in providers:
+        if machine_bytes((root / name).read_bytes()) != AMD64:
+            raise ValueError(f'Entry executable runtime must be x64: {name}')
+        if (name, AMD64) not in providers:
             raise ValueError(f'Required app-local VC runtime missing: {name}')
-        for provider in providers[name]:
+        for provider in providers[name, AMD64]:
             version = version_bytes((root / provider['path']).read_bytes())
             if version[:2] < MINIMUM_CRT:
                 raise ValueError(f'{provider["path"]} runtime {version} is older than MSVC 14.34')
