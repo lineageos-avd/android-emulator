@@ -102,6 +102,30 @@ jobs:
           # Expand paths in the FHS shell.
           # shellcheck disable=SC2016
           nix run . -- -c 'python3 scripts/elf-requirements.py --sdk "$ENGINE_OUT/distribution/emulator" --output dist/elf-requirements-linux-x86_64.json'
+      - name: Verify the extracted Linux SDK in Nix
+        if: runner.os == 'Linux'
+        env:
+          TARGET: ${{ matrix.target }}
+          RECIPE_COMMIT: ${{ github.sha }}
+        run: |
+          # Expand paths and the immutable source revision inside the FHS shell.
+          # shellcheck disable=SC2016
+          nix run . -- -c 'python3 scripts/verify-sdk.py --dist dist --target "$TARGET" --expected-recipe-commit "$RECIPE_COMMIT" --output "dist/sdk-verification-$TARGET.json"'
+      - name: Verify the extracted native macOS SDK
+        if: runner.os == 'macOS'
+        env:
+          TARGET: ${{ matrix.target }}
+          RECIPE_COMMIT: ${{ github.sha }}
+        run: nix develop -c python3 scripts/verify-sdk.py --dist dist --target "$TARGET" --expected-recipe-commit "$RECIPE_COMMIT" --output "dist/sdk-verification-$TARGET.json"
+      - name: Package and verify the compatible Windows runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          RECIPE_COMMIT: ${{ github.sha }}
+        run: |
+          python -m pip install --require-hashes -r scripts/requirements-windows-qa.txt
+          python scripts/repackage-windows-runtime.py --dist dist --expected-recipe-commit "$env:RECIPE_COMMIT" --packaging-commit "$env:RECIPE_COMMIT"
+          python scripts/verify-sdk.py --dist dist --target windows-x86_64 --expected-recipe-commit "$env:RECIPE_COMMIT" --output dist/sdk-verification-windows-x86_64.json
       - name: Export corresponding source
         if: runner.os == 'Linux'
         run: python3 scripts/source-archive.py --source "$ENGINE_SOURCE" --dist dist
@@ -112,6 +136,9 @@ jobs:
             dist/sdk-repo-*-emulator-*.zip
             dist/provenance-*.json
             dist/elf-requirements-*.json
+            dist/sdk-verification-*.json
+            dist/windows-dependencies.json
+            dist/NOTICE.MSVC-RUNTIME.txt
             dist/manifest-*.xml
             dist/SHA256SUMS-*
             dist/SOURCE_OFFER.md
