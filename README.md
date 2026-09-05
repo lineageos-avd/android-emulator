@@ -86,3 +86,7 @@ unit suite. The auxiliary VNC end-to-end runner ZIP is not packaged; CTest and
 acceleration checks remain enabled. The default still includes the unit-test data in `common/testdata`.
 Hub/LineageOS boot tests use the separately published LineageOS image releases.
 Including Google's full fixture set increases disk requirements to at least 150 GB.
+
+Mac graphics unit tests use the SDK's own Vulkan loader with ANGLE+SwiftShader
+for a consistent headless software backend. This environment applies only to the
+build/test subprocess; normal SDK users select their own runtime GPU backend.
