@@ -1,0 +1,2 @@
+# Patches intentionally match upstream LF or CRLF bytes; checkout must not rewrite them.
+*.patch -text
