@@ -80,6 +80,10 @@ below 3 GiB. It records progress in `build-status.json`. Intel tests run through
 Rosetta on Apple Silicon; install Rosetta before starting. Packaged intermediate build directories are removed before the
 next architecture to limit disk usage (`--keep-build-dirs` retains them). An interrupted source
 sync is resumed when the script runs again. The existing user emulator is untouched.
+Use `--target darwin-x86_64 --skip-sync` to resume only an interrupted Intel build
+from an already verified source checkout. The same disk guard remains active.
+Cross-target unit tests run through Rosetta, while hardware acceleration is
+validated separately on matching physical hardware.
 
 For networks where Google Git is slow, set `EMULATOR_AOSP_MIRROR` to an HTTPS AOSP
 Git mirror, for example `https://mirrors.tuna.tsinghua.edu.cn/git/AOSP`. This changes
