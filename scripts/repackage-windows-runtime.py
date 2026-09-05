@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 import zipfile
 
-from windows_runtime import CRT_DLLS, MINIMUM_CRT, audit, version_bytes
+from windows_runtime import AMD64, CRT_DLLS, MINIMUM_CRT, audit, machine_bytes, version_bytes
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('sdk_verifier', ROOT / 'scripts/verify-sdk.py')
@@ -89,6 +89,8 @@ def repackage(args):
     signed = signatures(redist)
     replacements = {name: (redist / name).read_bytes() for name in CRT_DLLS}
     for name, data in replacements.items():
+        if machine_bytes(data) != AMD64:
+            raise ValueError(f'Redistribution file is not x64: {name}')
         if version_bytes(data)[:2] < MINIMUM_CRT:
             raise ValueError(f'Redistribution file is older than MSVC 14.34: {name}')
     changes = []
@@ -110,6 +112,8 @@ def repackage(args):
                 targets = [sdk / name]
             for target in targets:
                 old = target.read_bytes() if target.exists() else None
+                if old and machine_bytes(old) != AMD64:
+                    raise ValueError(f'Refusing to replace a non-x64 helper runtime with an x64 DLL: {target}')
                 changes.append({'file': target.relative_to(sdk).as_posix(),
                                 'old_sha256': hashlib.sha256(old).hexdigest() if old else None,
                                 'old_version': '.'.join(map(str, version_bytes(old))) if old else None,
