@@ -57,6 +57,14 @@ def main():
     if args.skip_tests:
         command += ['--task-disable', 'ctest', '--task-disable', 'accelerationcheck']
     env = os.environ | {'CMAKE_BUILD_PARALLEL_LEVEL': str(args.jobs)}
+    if host == 'linux':
+        # Nix's ld wrapper must not append compiler sysroot directories to
+        # runtime search paths; upstream already provides $ORIGIN paths.
+        env['NIX_DONT_SET_RPATH'] = '1'
+    if host == 'darwin' and not env.get('EMULATOR_MACOS_SDK'):
+        sdk = Path('/Library/Developer/CommandLineTools/SDKs/MacOSX14.5.sdk')
+        if sdk.is_dir():
+            env['EMULATOR_MACOS_SDK'] = str(sdk)
     subprocess.run(command, cwd=qemu, env=env, check=True)
     subprocess.run(['python3' if host != 'windows' else 'python', str(ROOT / 'scripts/provenance.py'),
                     '--source', str(source), '--dist', str(dist), '--target', args.target,

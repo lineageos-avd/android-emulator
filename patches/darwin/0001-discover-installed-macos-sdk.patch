@@ -1,0 +1,123 @@
+--- a/android/scripts/unix/gen-android-sdk-toolchain.sh
++++ b/android/scripts/unix/gen-android-sdk-toolchain.sh
+@@ -507,61 +507,28 @@
+     panic "Required sdk not available.."
+ }
+ 
++# xcrun supports both full Xcode and the Command Line Tools SDK layout.
++# An explicit installed SDK path keeps CI independent of Xcode's moving default.
++select_macos_sdk() {
++    OSX_SDK_ROOT="${EMULATOR_MACOS_SDK:-}"
++    if [ -z "$OSX_SDK_ROOT" ]; then
++        OSX_SDK_ROOT=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null) || \
++            panic "No installed macOS SDK found through xcrun"
++    fi
++    if [ ! -f "$OSX_SDK_ROOT/SDKSettings.plist" ]; then
++        panic "Invalid macOS SDK path: $OSX_SDK_ROOT"
++    fi
++    OSX_SDK_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :Version' "$OSX_SDK_ROOT/SDKSettings.plist") || \
++        panic "Cannot read installed macOS SDK version"
++    XCODE_PATH=$(xcode-select -print-path 2>/dev/null)
++    log "OSX: Using installed SDK $OSX_SDK_VERSION at $OSX_SDK_ROOT"
++}
++
+ # Configure the darwin toolchain.
+ prepare_build_for_darwin() {
+     OSX_VERSION=$(sw_vers -productVersion)
+     OSX_DEPLOYMENT_TARGET=10.14
+-    OSX_REQUIRED=10.14
+-    MIN_XCODE=10
+-    OSX_DESIRED=12.2
+-
+-    # This is the list of supported SDKs,
+-    OSX_SDK_SUPPORTED="${OSX_REQUIRED} 10.15 10.16 11.0 11.1 11.2 11.3 11.4 11.5 11.6 12.0 12.1 12.3 13.0 13.1 13.3 14.0 14.2 14.4 14.5 15.0 15.1"
+-    OSX_XCODE=$(xcodebuild -version | tr '\n' ' ')
+-    OSX_SDK_INSTALLED_LIST=$(xcodebuild -showsdks 2>/dev/null | \
+-            egrep --color=never -o " macosx\d+.\d+$" | sed -e "s/.*macosx//g" | sort -n | \
+-            tr '\n' ' ')
+-    if [ -z "$OSX_SDK_INSTALLED_LIST" ]; then
+-        panic "Please install XCode for compatible with os version: $OSX_VERSION on this machine!"
+-    fi
+-    log "OSX ($OSX_VERSION): Installed SDKs: $OSX_SDK_INSTALLED_LIST"
+-    for supported_sdk in $(echo "$OSX_SDK_SUPPORTED" | tr ' ' '\n' | sort -r)
+-    do
+-        POSSIBLE_OSX_SDK_VERSION=$(echo "$OSX_SDK_INSTALLED_LIST" | tr ' ' '\n' | grep $supported_sdk | head -1)
+-        if [ -n "$POSSIBLE_OSX_SDK_VERSION" ]; then
+-            OSX_SDK_VERSION=$POSSIBLE_OSX_SDK_VERSION
+-        fi
+-    done
+-
+-    # Extract the Xcode version, and use version sort to stack the installed version
+-    # on top of what you have. If your version is to low it ends up on top.
+-    OSX_XCODE_VERSION=$(xcodebuild -version | egrep 'Xcode (\d+.\d+)' | sed 's/Xcode //g')
+-    VERSION_SORT=$(printf "$MIN_XCODE\n$OSX_XCODE_VERSION" | sort --version-sort | head -n 1)
+-
+-    if test "$VERSION_SORT" != "$MIN_XCODE"; then
+-        log "You need to have at least XCode 10 installed, not ${OSX_XCODE}"
+-        please_install_proper_sdk_error
+-    fi
+-
+-    XCODE_PATH=$(xcode-select -print-path 2>/dev/null)
+-
+-    log "OSX: Using ${OSX_XCODE} with SDK version $OSX_SDK_VERSION"
+-    log "OSX: XCode path: $XCODE_PATH"
+-
+-    if [ -z "$OSX_SDK_VERSION" ]; then
+-        please_install_proper_sdk_error
+-    fi
+-
+-    OSX_SDK_ROOT=$XCODE_PATH/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk
+-    log2 "OSX: Looking for $OSX_SDK_ROOT"
+-    if [ ! -d "$OSX_SDK_ROOT" ]; then
+-        OSX_SDK_ROOT=/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk
+-        log2 "OSX: Looking for $OSX_SDK_ROOT"
+-        if [ ! -d "$OSX_SDK_ROOT" ]; then
+-            please_install_proper_sdk_error
+-        fi
+-    fi
+-    log "OSX: Using SDK at $OSX_SDK_ROOT"
++    select_macos_sdk
+     EXTRA_ENV_SETUP="export SDKROOT=$OSX_SDK_ROOT"
+     CLANG_BINDIR=$PREBUILT_TOOLCHAIN_DIR/bin
+     PREBUILT_TOOLCHAIN_DIR=
+@@ -789,39 +756,7 @@
+     CLANG_BINDIR=$PREBUILT_TOOLCHAIN_DIR/bin
+     OSX_VERSION=$(sw_vers -productVersion)
+     OSX_DEPLOYMENT_TARGET=10.16
+-    OSX_SDK_SUPPORTED="10.11 10.12 10.13 10.14 10.15 10.16 11.0 11.1 11.2 11.3 11.4 11.5 11.6 12.0 12.1 12.3 13.0 13.1 13.3 14.0 14.2 14.4 14.5 15.0 15.1"
+-    OSX_SDK_INSTALLED_LIST=$(xcodebuild -showsdks 2>/dev/null | \
+-            grep --color=never macosx | sed -e "s/.*macosx10\.//g" | sort -n | \
+-            sed -e 's/^/10./g' | tr '\n' ' ')
+-    if [ -z "$OSX_SDK_INSTALLED_LIST" ]; then
+-        panic "Please install XCode on this machine!"
+-    fi
+-    log "OSX: Installed SDKs: $OSX_SDK_INSTALLED_LIST"
+-    for supported_sdk in $(echo "$OSX_SDK_SUPPORTED" | tr ' ' '\n' | sort -r)
+-    do
+-        POSSIBLE_OSX_SDK_VERSION=$(echo "$OSX_SDK_INSTALLED_LIST" | tr ' ' '\n' | grep $supported_sdk | head -1)
+-        if [ -n "$POSSIBLE_OSX_SDK_VERSION" ]; then
+-            OSX_SDK_VERSION=$POSSIBLE_OSX_SDK_VERSION
+-        fi
+-    done
+-    log "OSX: Using SDK version $OSX_SDK_VERSION"
+-    if [ -z "$OSX_SDK_VERSION" ]; then
+-        panic "No supported OSX SDKs found on the machine (Need any of: [$OSX_SDK_SUPPORTED], have: [$OSX_SDK_INSTALLED_LIST])"
+-    fi
+-
+-    XCODE_PATH=$(xcode-select -print-path 2>/dev/null)
+-    log "OSX: XCode path: $XCODE_PATH"
+-
+-    OSX_SDK_ROOT=$XCODE_PATH/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk
+-    log "OSX: Looking for $OSX_SDK_ROOT"
+-    if [ ! -d "$OSX_SDK_ROOT" ]; then
+-        OSX_SDK_ROOT=/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk
+-        log "OSX: Looking for $OSX_SDK_ROOT"
+-        if [ ! -d "$OSX_SDK_ROOT" ]; then
+-            panic "Could not find SDK $OSX_SDK_VERSION at $OSX_SDK_ROOT"
+-        fi
+-    fi
+-    log "OSX: Using SDK at $OSX_SDK_ROOT"
++    select_macos_sdk
+     EXTRA_ENV_SETUP="export SDKROOT=$OSX_SDK_ROOT"
+     PREBUILT_TOOLCHAIN_DIR=
+ 
