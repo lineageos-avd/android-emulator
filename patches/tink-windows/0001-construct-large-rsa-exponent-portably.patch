@@ -1,0 +1,17 @@
+diff --git a/tink/internal/rsa_util_test.cc b/tink/internal/rsa_util_test.cc
+--- a/tink/internal/rsa_util_test.cc
++++ b/tink/internal/rsa_util_test.cc
+@@ -107,7 +107,12 @@
+   RsaPrivateKey private_key;
+ 
+   internal::SslUniquePtr<BIGNUM> e(BN_new());
+-  BN_set_word(e.get(), 1L << 33);
++  // Windows uses 32-bit long even in 64-bit builds, so 1L << 33 is
++  // undefined. Build an odd 34-bit exponent with the BIGNUM API so this
++  // specifically exercises the exponent-size check on every platform.
++  ASSERT_EQ(BN_set_word(e.get(), 1), kSslSuccess);
++  ASSERT_EQ(BN_set_bit(e.get(), 33), kSslSuccess);
++  ASSERT_EQ(BN_num_bits(e.get()), 34);
+   EXPECT_THAT(NewRsaKeyPair(/*modulus_size_in_bits=*/2048, e.get(),
+                             &private_key, &public_key),
+               StatusIs(absl::StatusCode::kInvalidArgument));
