@@ -1,0 +1,30 @@
+Subject: [PATCH] Allocate the death-test guard after the child test setup
+
+ScopedGuardedPage deliberately leaves its second page unmapped and documents
+that it is not thread-safe. The death-test and exception-swallower setup can
+reuse this hole before the intended fault, especially with Rosetta's runtime
+mappings. Construct a fresh guard inside the death statement after that setup
+and perform a volatile faulting store. Keep the first-page write assertions
+and the requirement for an actual crash unchanged.
+
+--- a/android/third_party/crashpad/test/scoped_guarded_page_test.cc
++++ b/android/third_party/crashpad/test/scoped_guarded_page_test.cc
+@@ -30,7 +30,17 @@
+   EXPECT_NE(address, nullptr);
+   address[0] = 0;
+   address[base::GetPageSize() - 1] = 0;
+-  EXPECT_DEATH_CRASH({ address[base::GetPageSize()] = 0; }, "");
++  EXPECT_DEATH_CRASH(
++      {
++        // Google Test and the exception swallower create their own mappings.
++        // Allocate the non-thread-safe guard only after that child setup, so
++        // its deliberately unmapped page cannot be reused by test machinery.
++        ScopedGuardedPage child_page;
++        volatile char* child_address =
++            static_cast<volatile char*>(child_page.Pointer());
++        child_address[base::GetPageSize()] = 0;
++      },
++      "");
+ }
+ 
+ }  // namespace
