@@ -43,6 +43,9 @@ jobs:
           pathlib.Path('evidence/runtime-inspection.json').write_text(json.dumps(record, indent=2))
           print(json.dumps({'directory': str(directory), 'runtime': record['vc_runtime']}, indent=2))
           '@ | python -
+      - name: Verify direct and delayed PE imports with real MSVC executables
+        if: inputs.run_id == ''
+        run: python scripts/probe-pe-delay-imports.py --output evidence/pe-delay-imports.json
       - name: Validate the producing workflow and download its immutable artifact
         if: inputs.run_id != ''
         shell: pwsh
