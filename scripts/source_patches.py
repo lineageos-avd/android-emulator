@@ -30,11 +30,30 @@ def apply_patches(source):
         expected = subprocess.check_output(['git', '-C', str(qemu), 'diff', '--cached', '--binary', 'HEAD'], env=env)
     current = subprocess.check_output(['git', '-C', str(qemu), 'diff', '--binary', 'HEAD'])
     untracked = subprocess.check_output(['git', '-C', str(qemu), 'ls-files', '--others', '--exclude-standard'])
-    if untracked or (current and current != expected):
-        raise RuntimeError('QEMU contains edits outside the reviewed recipe patches; preserve them in a separate checkout')
-    if not current:
-        for patch in patches:
-            subprocess.run(['git', '-C', str(qemu), 'apply', str(ROOT / patch['file'])], check=True)
+    if untracked:
+        raise RuntimeError('QEMU contains untracked files outside the recipe patches')
+    missing = patches if not current else []
+    if current and current != expected:
+        # A recipe update may add a patch to a previously patched checkout.
+        # Undo recognized patches only in a throwaway index; reject any
+        # residual user edits before touching the actual working tree.
+        with tempfile.TemporaryDirectory(prefix='hub-existing-patches-') as temporary:
+            env = os.environ | {'GIT_INDEX_FILE': str(Path(temporary) / 'index')}
+            subprocess.run(['git', '-C', str(qemu), 'read-tree', 'HEAD'], env=env, check=True)
+            subprocess.run(['git', '-C', str(qemu), 'add', '-u'], env=env, check=True)
+            applied = set()
+            for patch in reversed(patches):
+                command = ['git', '-C', str(qemu), 'apply', '--cached', '--reverse']
+                check = subprocess.run([*command, '--check', str(ROOT / patch['file'])], env=env, capture_output=True)
+                if check.returncode == 0:
+                    subprocess.run([*command, str(ROOT / patch['file'])], env=env, check=True)
+                    applied.add(patch['file'])
+            residual = subprocess.check_output(['git', '-C', str(qemu), 'diff', '--cached', '--binary', 'HEAD'], env=env)
+            if residual:
+                raise RuntimeError('QEMU contains edits outside the reviewed recipe patches; preserve them in a separate checkout')
+            missing = [patch for patch in patches if patch['file'] not in applied]
+    if missing:
+        subprocess.run(['git', '-C', str(qemu), 'apply', *[str(ROOT / patch['file']) for patch in missing]], check=True)
     actual = subprocess.check_output(['git', '-C', str(qemu), 'diff', '--binary', 'HEAD'])
     if actual != expected:
         raise RuntimeError('Patched source does not match the expected recipe patch set')

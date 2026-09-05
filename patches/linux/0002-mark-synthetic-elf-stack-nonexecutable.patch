@@ -1,0 +1,23 @@
+--- a/android/third_party/crashpad/snapshot/linux/test_modules.cc
++++ b/android/third_party/crashpad/snapshot/linux/test_modules.cc
+@@ -53,6 +53,7 @@
+       Phdr load1;
+       Phdr load2;
+       Phdr dynamic;
++      Phdr stack;
+     } phdr_table;
+     struct {
+       Dyn hash;
+@@ -155,6 +156,12 @@
+   module.phdr_table.load2.p_memsz = segment_size;
+   module.phdr_table.load2.p_flags = PF_R | PF_W;
+   module.phdr_table.load2.p_align = page_size;
++
++  // Current loaders reject an implicit executable stack on dlopen().
++  // This synthetic module contains no executable code and needs only RW stack.
++  module.phdr_table.stack.p_type = PT_GNU_STACK;
++  module.phdr_table.stack.p_flags = PF_R | PF_W;
++  module.phdr_table.stack.p_align = 16;
+ 
+   module.phdr_table.dynamic.p_type = PT_DYNAMIC;
+   module.phdr_table.dynamic.p_offset =
