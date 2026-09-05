@@ -1,0 +1,54 @@
+name: Verify Windows SDK artifact
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Completed source build run containing engine-windows-x86_64
+        type: string
+        required: true
+permissions:
+  actions: read
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'lineageos-avd/android-emulator'
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate the producing workflow and download its immutable artifact
+        shell: pwsh
+        env:
+          BUILD_RUN_ID: ${{ inputs.run_id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          @'
+          import json, os, pathlib, subprocess
+          run_id = os.environ['BUILD_RUN_ID']
+          if not run_id.isdecimal():
+              raise SystemExit('run_id must be a numeric GitHub Actions run ID')
+          repo = os.environ['GITHUB_REPOSITORY']
+          run = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}']))
+          if run['path'] != '.github/workflows/build.yml' or run['status'] != 'completed':
+              raise SystemExit('Expected a completed source engine build workflow')
+          jobs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}/jobs']))
+          if not any(job['name'] == 'build (windows-x86_64)' and job['conclusion'] == 'success' for job in jobs['jobs']):
+              raise SystemExit('The producing Windows build and upstream tests did not succeed')
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/producing-run.json').write_text(json.dumps({key: run[key] for key in ('id', 'head_sha', 'html_url', 'path')}, indent=2))
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env:
+              env.write('EXPECTED_RECIPE_COMMIT=' + run['head_sha'] + '\n')
+          subprocess.run(['gh', 'run', 'download', run_id, '--repo', repo, '--name', 'engine-windows-x86_64', '--dir', 'dist'], check=True)
+          '@ | python -
+      - name: Verify SHA256 and run the extracted Windows executable
+        shell: pwsh
+        run: python scripts/verify-sdk.py --dist dist --target windows-x86_64 --output evidence/sdk-verification-windows-x86_64.json --expected-recipe-commit "$env:EXPECTED_RECIPE_COMMIT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sdk-verification-windows-x86_64
+          path: evidence/*.json
+          if-no-files-found: warn
