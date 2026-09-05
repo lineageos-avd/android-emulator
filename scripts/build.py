@@ -43,6 +43,10 @@ def main():
                 '--dist', str(dist), '--sdk_build_number', args.build_number,
                 '--config', 'release', '--crash', 'none', '--task-disable', 'clean',
                 '--test_jobs', str(min(args.jobs, 8))]
+    if host == 'linux':
+        command += ['--cmake_option', 'CMAKE_SKIP_BUILD_RPATH=ON',
+                    '--cmake_option', 'CMAKE_SHARED_LINKER_FLAGS=-Wl,-z,noexecstack',
+                    '--cmake_option', 'CMAKE_EXE_LINKER_FLAGS=-Wl,-z,noexecstack']
     if host == 'darwin' and platform.machine().lower() in {'arm64', 'aarch64'} and args.target == 'darwin-x86_64':
         # A native Mac can run the Intel unit suite through Rosetta. Upstream
         # otherwise silently disables CTest for cross-architecture builds.

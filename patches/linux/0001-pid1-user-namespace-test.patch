@@ -1,0 +1,42 @@
+--- a/android/third_party/crashpad/util/posix/process_info_test.cc
++++ b/android/third_party/crashpad/util/posix/process_info_test.cc
+@@ -15,6 +15,7 @@
+ #include "util/posix/process_info.h"
+ 
+ #include <sys/utsname.h>
++#include <sys/stat.h>
+ #include <time.h>
+ 
+ #include <algorithm>
+@@ -194,14 +195,25 @@
+   ASSERT_TRUE(process_info.InitializeWithPid(1));
+ #endif
+ 
++  // The host root UID/GID may be unmapped inside a Linux user namespace.
++  // Compare against the kernel's view of PID 1 in the same namespace.
++  uid_t init_uid = 0;
++  gid_t init_gid = 0;
++#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
++  struct stat init_stat = {};
++  ASSERT_EQ(stat("/proc/1", &init_stat), 0);
++  init_uid = init_stat.st_uid;
++  init_gid = init_stat.st_gid;
++#endif
++
+   EXPECT_EQ(process_info.ProcessID(), implicit_cast<pid_t>(1));
+   EXPECT_EQ(process_info.ParentProcessID(), implicit_cast<pid_t>(0));
+-  EXPECT_EQ(process_info.RealUserID(), implicit_cast<uid_t>(0));
+-  EXPECT_EQ(process_info.EffectiveUserID(), implicit_cast<uid_t>(0));
+-  EXPECT_EQ(process_info.SavedUserID(), implicit_cast<uid_t>(0));
+-  EXPECT_EQ(process_info.RealGroupID(), implicit_cast<gid_t>(0));
+-  EXPECT_EQ(process_info.EffectiveGroupID(), implicit_cast<gid_t>(0));
+-  EXPECT_EQ(process_info.SavedGroupID(), implicit_cast<gid_t>(0));
++  EXPECT_EQ(process_info.RealUserID(), init_uid);
++  EXPECT_EQ(process_info.EffectiveUserID(), init_uid);
++  EXPECT_EQ(process_info.SavedUserID(), init_uid);
++  EXPECT_EQ(process_info.RealGroupID(), init_gid);
++  EXPECT_EQ(process_info.EffectiveGroupID(), init_gid);
++  EXPECT_EQ(process_info.SavedGroupID(), init_gid);
+   EXPECT_FALSE(process_info.AllGroups().empty());
+ }
+ 
