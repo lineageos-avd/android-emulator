@@ -33,6 +33,9 @@ def main():
     apply_patches(source)
     dist.mkdir(parents=True, exist_ok=True)
     host = platform.system().lower()
+    if (host == 'darwin' and platform.machine().lower() not in {'arm64', 'aarch64'}
+            and args.target == 'darwin-aarch64' and not args.skip_tests):
+        raise SystemExit('ARM64 Mac release tests require Apple Silicon; Intel hosts can only cross-build diagnostic artifacts with --skip-tests')
     if host == 'windows':
         command = ['cmd', '/c', str(qemu / 'android/rebuild.cmd')]
     else:
