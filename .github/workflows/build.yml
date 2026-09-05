@@ -96,6 +96,12 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: python scripts/build.py --source "$env:ENGINE_SOURCE" --target "$env:TARGET" --out "$env:ENGINE_OUT" --dist dist --build-number "$env:GITHUB_RUN_NUMBER" --skip-acceleration-check
+      - name: Record shipped Linux ELF requirements
+        if: runner.os == 'Linux'
+        run: |
+          # Expand paths in the FHS shell.
+          # shellcheck disable=SC2016
+          nix run . -- -c 'python3 scripts/elf-requirements.py --sdk "$ENGINE_OUT/distribution/emulator" --output dist/elf-requirements-linux-x86_64.json'
       - name: Export corresponding source
         if: runner.os == 'Linux'
         run: python3 scripts/source-archive.py --source "$ENGINE_SOURCE" --dist dist
@@ -105,6 +111,7 @@ jobs:
           path: |
             dist/sdk-repo-*-emulator-*.zip
             dist/provenance-*.json
+            dist/elf-requirements-*.json
             dist/manifest-*.xml
             dist/SHA256SUMS-*
             dist/SOURCE_OFFER.md
