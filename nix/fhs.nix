@@ -7,6 +7,11 @@ pkgs.buildFHSEnv {
     gnumake ninja cmake gcc clang pkg-config ccache bc bison flex m4 gperf
     glibc zlib zlib.dev ncurses ncurses5 openssl libxml2 lz4 lzop dtc
     lsb-release libpng libjpeg libxml2 libxslt util-linux procps patchelf libxcrypt-legacy alsa-lib libGL libdrm
+    # The completed SDK also runs here during archive verification. Keep its
+    # runtime libraries available independently of the compiler toolchain.
+    stdenv.cc.cc.lib expat libglvnd libbsd libmd vulkan-loader libpulseaudio
+    fontconfig freetype libxkbcommon wayland libusb1 libuuid nss nspr
+    libxrender libxtst libice libsm libxcb
     icu krb5 lttng-ust libunwind
     xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr
   ];
