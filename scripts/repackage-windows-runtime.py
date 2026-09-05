@@ -141,7 +141,7 @@ def repackage(args):
         provenance_path.write_bytes(provenance_data)
         (dist / 'NOTICE.MSVC-RUNTIME.txt').write_text(notice, encoding='utf-8')
         (dist / 'windows-dependencies.json').write_text(json.dumps(dependency_report, indent=2) + '\n', encoding='utf-8')
-        with checksums_path.open('w', encoding='utf-8') as output:
+        with checksums_path.open('w', encoding='utf-8', newline='\n') as output:
             for path in sorted(dist.iterdir()):
                 if (path.is_file() and not path.name.startswith('SHA256SUMS')
                         and not any(marker in path.name for marker in ('-debug-', '-symbols-', '-python-samples-'))):
