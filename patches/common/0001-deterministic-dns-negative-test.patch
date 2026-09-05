@@ -1,0 +1,16 @@
+--- a/android/android-emu-base/android/base/network/Dns_unittest.cpp
++++ b/android/android-emu-base/android/base/network/Dns_unittest.cpp
+@@ -41,7 +41,12 @@
+ }
+ 
+ TEST(Dns, ResolveUnknownHost) {
+-    Dns::AddressList list = Dns::resolveName("does.not.exist.for.realz.bc");
++    // An external resolver may synthesize records for unknown domains.
++    // Exercise both resolver outcomes with the existing deterministic fixture.
++    TestDnsResolver resolver;
++    resolver.addEntry("known.example.test", "127.0.0.1");
++    EXPECT_FALSE(Dns::resolveName("known.example.test").empty());
++    Dns::AddressList list = Dns::resolveName("unknown.example.test");
+     EXPECT_TRUE(list.empty());
+ }
+ 

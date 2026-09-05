@@ -12,9 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def describe_patches(host=None):
     host = host or platform.system().lower()
+    paths = [*sorted((ROOT / 'patches/common').glob('*.patch')), *sorted((ROOT / 'patches' / host).glob('*.patch'))]
     return [{'file': path.relative_to(ROOT).as_posix(), 'project': 'external/qemu',
              'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
-            for path in sorted((ROOT / 'patches' / host).glob('*.patch'))]
+            for path in paths]
 
 
 def apply_patches(source):
