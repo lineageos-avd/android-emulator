@@ -2,6 +2,7 @@
 /out/
 /dist/
 /target/
+/release-artifacts/
 result
 __pycache__/
 *.pyc

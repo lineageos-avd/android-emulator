@@ -134,23 +134,15 @@ jobs:
       - name: Export exact Windows helper source packages
         if: runner.os == 'Linux'
         run: python3 scripts/windows-helpers-source.py --source "$ENGINE_SOURCE" --dist dist --cache "$ENGINE_SOURCE/../windows-helper-source-cache"
+      - name: Stage only verified release files and their exact checksums
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: python3 scripts/stage-release.py --dist dist --out release-artifacts --target "$TARGET"
       - uses: actions/upload-artifact@v4
         with:
           name: engine-${{ matrix.target }}
-          path: |
-            dist/sdk-repo-*-emulator-*.zip
-            dist/provenance-*.json
-            dist/elf-requirements-*.json
-            dist/sdk-verification-*.json
-            dist/windows-dependencies.json
-            dist/NOTICE.MSVC-RUNTIME.txt
-            dist/manifest-*.xml
-            dist/SHA256SUMS-*
-            dist/SOURCE_OFFER.md
-            dist/engine-corresponding-source.tar.gz*
-            dist/windows-helpers-corresponding-source-*.tar.gz
-            dist/windows-helpers-source-map.json
-            dist/windows-helpers-source-notice.md
+          path: release-artifacts/*
           if-no-files-found: error
   release:
     if: startsWith(github.ref, 'refs/tags/engine-')
