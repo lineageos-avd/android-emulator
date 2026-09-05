@@ -40,7 +40,7 @@ def apply_patches(source):
         with tempfile.TemporaryDirectory(prefix='hub-existing-patches-') as temporary:
             env = os.environ | {'GIT_INDEX_FILE': str(Path(temporary) / 'index')}
             subprocess.run(['git', '-C', str(qemu), 'read-tree', 'HEAD'], env=env, check=True)
-            subprocess.run(['git', '-C', str(qemu), 'add', '-u'], env=env, check=True)
+            subprocess.run(['git', '-C', str(qemu), 'apply', '--cached', '--binary', '-'], input=current, env=env, check=True)
             applied = set()
             for patch in reversed(patches):
                 command = ['git', '-C', str(qemu), 'apply', '--cached', '--reverse']
