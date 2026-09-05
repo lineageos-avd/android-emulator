@@ -1,0 +1,17 @@
+Subject: [PATCH] Reconfigure the host protoc helper after build recipe changes
+
+ExternalProject's default stamps do not track the source CMakeLists. Incremental
+cross builds would retain the old helper layout after a protobuf build change.
+Make that configure dependency explicit without rebuilding unrelated targets.
+
+--- a/android/third_party/protobuf/CMakeLists.txt
++++ b/android/third_party/protobuf/CMakeLists.txt
+@@ -77,6 +77,8 @@
+     BUILD_BYPRODUCTS ${PROTOC}
+     LOG_OUTPUT_ON_FAILURE TRUE
+     INSTALL_COMMAND "")
++  externalproject_add_stepdependencies(protobuf_ext_cross configure
++                                       "${CMAKE_CURRENT_LIST_FILE}")
+ 
+   set(protobuf_BUILD_PROTOC_BINARIES FALSE)
+   add_subdirectory(${protobuf_SOURCE_DIR} protobuf)
