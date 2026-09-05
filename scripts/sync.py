@@ -11,6 +11,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -63,6 +64,22 @@ def recover_interrupted_fetches(source, manifest, mirror, jobs, integration_imag
             pass
 
 
+def sync_projects(command, source, manifest, env, direct_env, mirror, jobs, integration_images):
+    """Resume transient transport failures without changing any commit pin."""
+    transport, transport_env = mirror, env
+    for attempt in range(3):
+        try:
+            recover_interrupted_fetches(source, manifest, transport, jobs, integration_images)
+            run(*command, cwd=source, env=transport_env)
+            return
+        except subprocess.CalledProcessError:
+            if attempt == 2:
+                raise
+            print(f'Source sync attempt {attempt + 1} failed; repairing incomplete snapshots and retrying Google ({attempt + 2}/3)', flush=True)
+            transport, transport_env = None, direct_env
+            time.sleep(5 * (attempt + 1))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, required=True)
@@ -106,7 +123,6 @@ def main():
     repo_revision = subprocess.check_output(['git', '-C', str(source / '.repo/repo'), 'rev-parse', 'HEAD'], text=True).strip()
     if repo_revision != 'b85886fa9f5b4e2189cc5b2f40bd0a80459d4c77':
         raise SystemExit(f'Repo tool revision mismatch: {repo_revision}')
-    recover_interrupted_fetches(source, source / '.repo/manifests/default.xml', args.aosp_mirror, args.jobs, args.integration_images)
     direct_env = env.copy()
     if args.aosp_mirror:
         index = int(env.get('GIT_CONFIG_COUNT', '0'))
@@ -114,15 +130,12 @@ def main():
         env[f'GIT_CONFIG_VALUE_{index}'] = 'https://android.googlesource.com/'
         env['GIT_CONFIG_COUNT'] = str(index + 1)
         print(f'Fetching exact AOSP commits through {args.aosp_mirror}', flush=True)
-    sync_command = [*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags', '--fail-fast',
+    # Let active independent fetches finish before retrying a transport error.
+    # Failing early can leave a large snapshot half fetched on ephemeral runners.
+    sync_command = [*repo, 'sync', '-c', '--no-clone-bundle', '--no-tags',
                     '-j', str(min(args.jobs, 4) if args.aosp_mirror else args.jobs)]
-    try:
-        run(*sync_command, cwd=source, env=env)
-    except subprocess.CalledProcessError:
-        if not args.aosp_mirror:
-            raise
-        print('Mirror synchronization failed; retrying remaining commits from Google', flush=True)
-        run(*sync_command, cwd=source, env=direct_env)
+    sync_projects(sync_command, source, source / '.repo/manifests/default.xml', env,
+                  direct_env, args.aosp_mirror, args.jobs, args.integration_images)
     run(*repo, 'manifest', '-r', '-o', source / 'resolved-manifest.xml', cwd=source, env=env)
     lock = json.loads((ROOT / 'upstream.json').read_text())
     actual = subprocess.check_output(['git', '-C', str(source / 'external/qemu'), 'rev-parse', 'HEAD'], text=True).strip()
