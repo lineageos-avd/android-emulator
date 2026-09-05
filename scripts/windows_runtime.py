@@ -10,15 +10,15 @@ CRT_DLLS = (
 MINIMUM_CRT = (14, 34)
 AMD64 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_AMD64']
 I386 = pefile.MACHINE_TYPE['IMAGE_FILE_MACHINE_I386']
-SYSTEM_DLLS = set('''advapi32 avicap32 avrt bcrypt cfgmgr32 combase comctl32
-comdlg32 crypt32 cryptbase cryptsp d3d9 d3d11 d3d12 d3dcompiler_47 dbgcore dbghelp
+SYSTEM_DLLS = set('''advapi32 authz avicap32 avrt bcrypt bluetoothapis bthprops.cpl cfgmgr32 combase comctl32
+comdlg32 crypt32 cryptbase cryptsp d2d1 d3d9 d3d11 d3d12 d3dcompiler_47 dbgcore dbghelp
 dcomp dhcpcsvc dnsapi dwmapi dwrite dxcore dxgi dxva2 fltlib gdi32 gdi32full glu32
 hid imagehlp imm32 iphlpapi kernel32 kernelbase mf mfplat mfreadwrite mmdevapi
-msacm32 msimg32 msvcrt ncrypt netapi32 normaliz ntdll ole32 oleacc oleaut32
-opengl32 powrprof propsys psapi rasapi32 rpcrt4 secur32 sensapi setupapi shell32
-shlwapi sspicli ucrtbase user32 userenv usp10 uxtheme version win32u windowscodecs
+mpr msacm32 msimg32 msvcrt ncrypt netapi32 normaliz ntdll odbc32 ole32 oleacc oleaut32
+opengl32 pdh powrprof propsys psapi rasapi32 rpcrt4 secur32 sensapi setupapi shell32
+shlwapi sspicli ucrtbase urlmon user32 userenv usp10 uxtheme version win32u windowscodecs
 winhttp wininet winmm winnsi winscard winspool.drv wintrust wlanapi wldap32
-ws2_32 wtsapi32'''.split())
+winusb ws2_32 wtsapi32'''.split())
 SYSTEM_DLLS = {name if '.' in name else name + '.dll' for name in SYSTEM_DLLS}
 
 
