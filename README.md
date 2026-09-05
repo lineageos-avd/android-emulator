@@ -40,23 +40,31 @@ python3 scripts/source-archive.py --source ../engine-source --dist dist
 `build.yml` runs four independent platform builds on pinned manifest updates, tags or manual dispatch. Linux
 uses a trusted self-hosted runner labeled `emulator-linux` with Nix and 150 GB disk.
 The other targets use GitHub-hosted machines; repositories are fetched shallowly.
-The run fails rather than publishing partial builds or fabricated downloads.
+Automatic `engine-*` tag releases require all four builds to complete.
 CI on pull requests validates the manifest and scripts without executing untrusted
 changes on the Lab machine. Native preview packages remain unsigned/not notarized;
 hardware acceleration is a separate smoke-test requirement before a stable release.
 
-Release publication requires the four compiled archives, upstream test passes,
-provenance, notices and corresponding source archive. `catalog.json` in each
-complete Release has this schema:
+Every published target requires its compiled archive, upstream test passes,
+provenance, notices and corresponding source archive. Imported `source-*` previews
+can publish completed targets incrementally, with their actual per-target recipe
+commits; unavailable targets are omitted from the catalog. The schema is:
 
 ```json
-{"schema_version":1,"engines":[{"host_os":"linux","host_arch":"x86_64","version":"TAG","url":"HTTPS_RELEASE_ASSET","size":123,"sha256":"HEX","executable":"emulator/emulator"}]}
+{"schema_version":1,"engines":[{"host_os":"linux","host_arch":"x86_64","version":"35.3.8","url":"HTTPS_RELEASE_ASSET","size":123,"sha256":"HEX","executable":"emulator/emulator"}]}
 ```
 
 The stable catalog endpoint is
 `https://raw.githubusercontent.com/lineageos-avd/android-emulator/main/catalog.json`.
-`main/catalog.json` starts empty intentionally until the first complete source build.
+The version is the actual SDK version, independent of the manifest branch or release tag.
 Platform tools/ADB come separately from Google and are not bundled here.
+
+The first Linux SDK's ELF version requirements were scanned with `readelf`: the
+highest required GLIBC symbol version is **2.27**, with no external GLIBCXX/CXXABI
+version requirements. The release includes the per-file report. This is an ABI
+requirement inspection, not hardware validation on every older distribution.
+Emulator Hub's separate desktop package has its own glibc 2.35 minimum. NixOS
+users can launch downloaded SDK tools through Hub's supplied FHS runtime.
 
 See [SOURCE_OFFER.md](SOURCE_OFFER.md) for source availability and licensing and
 [Google's build documentation](https://android.googlesource.com/platform/external/qemu/+/emu-36-1-release/android/docs/DEVELOPMENT.md)

@@ -29,7 +29,7 @@ def main():
         subprocess.run(['git', '-C', str(ROOT), 'bundle', 'create', str(bundle), '--all'], check=True)
         archive.add(bundle, arcname='hub-build/recipes.bundle')
         archive.add(manifest, arcname='resolved-manifest.xml')
-        for path in ['default.xml', 'upstream.json', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'patches', 'nix', 'flake.nix', 'flake.lock']:
+        for path in ['default.xml', 'upstream.json', 'README.md', 'SOURCE_OFFER.md', 'LICENSE', 'scripts', 'patches', 'nix', 'flake.nix', 'flake.lock']:
             archive.add(ROOT / path, arcname='hub-build/' + path)
         for project in ET.parse(manifest).getroot().findall('project'):
             path = project.attrib.get('path', project.attrib['name'])
