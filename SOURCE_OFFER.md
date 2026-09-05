@@ -18,6 +18,10 @@ restored from the recorded AOSP manifest. Their upstream license files remain in
 repositories and resulting distribution notices.
 
 To build from source, follow README.md. Source archives and manifest remain publicly
-available alongside their corresponding binaries; release publication fails unless
-all four binary targets and the corresponding-source job succeed. This is an
-independent project, not a Google or LineageOS official release.
+available alongside their corresponding binaries. Automatic `engine-*` tag releases
+require all four binary targets and the corresponding-source job to succeed.
+Imported preview releases may publish completed targets incrementally, with their
+actual per-target recipe commits and validation evidence. The catalog advertises
+only uploaded, tested binaries with corresponding source; later targets include
+any additional recipe history required to reproduce them. This is an independent
+project, not a Google or LineageOS official release.
