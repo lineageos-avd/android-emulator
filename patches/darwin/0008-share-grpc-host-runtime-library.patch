@@ -1,0 +1,43 @@
+Subject: [PATCH] Share the nested protoc runtime with the host gRPC plugin
+
+The standalone gRPC host project nests protobuf under protoc/, while its
+plugin executable lives at the project root. Place Abseil in the root lib64
+and point nested protoc's existing lib64 symlink there, so both host tools
+resolve the same library. Track the host configuration inputs explicitly
+instead of retaining stale ExternalProject configure stamps.
+
+--- a/android/third_party/protobuf/CMakeLists.txt
++++ b/android/third_party/protobuf/CMakeLists.txt
+@@ -111,10 +111,12 @@
+   # output directory. Keep Abseil in the lib64 directory searched by protoc's
+   # install RPATH and the symlink below; otherwise the built host protoc cannot
+   # run while generating sources for the other architecture.
++  # A gRPC host plugin nests this project under protoc/. Both its root-level
++  # plugin and the nested protoc must resolve the same Abseil library.
+   set_target_properties(abseil_dll PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+-                                            "${CMAKE_CURRENT_BINARY_DIR}/lib64")
++                                            "${CMAKE_BINARY_DIR}/lib64")
+   execute_process(
+     COMMAND
+-      ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_BINARY_DIR}/lib64"
++      ${CMAKE_COMMAND} -E create_symlink "${CMAKE_BINARY_DIR}/lib64"
+       "${CMAKE_CURRENT_BINARY_DIR}/protobuf/lib64")
+ endif()
+--- a/android/build/cmake/android.cmake
++++ b/android/build/cmake/android.cmake
+@@ -94,6 +94,15 @@
+         LOG_INSTALL ON
+         LOG_OUTPUT_ON_FAILURE TRUE
+         INSTALL_COMMAND "")
++      if(EXE STREQUAL "grpc_cpp_plugin")
++        # ExternalProject stamps do not otherwise notice edits to the host
++        # plugin's nested protobuf build or this recipe's runtime layout.
++        externalproject_add_stepdependencies(
++          ${EXE}_ext_cross configure
++          "${SOURCE}/CMakeLists.txt"
++          "${ANDROID_QEMU2_TOP_DIR}/android/third_party/protobuf/CMakeLists.txt"
++          "${ANDROID_QEMU2_TOP_DIR}/android/build/cmake/android.cmake")
++      endif()
+     endif()
+     set(${OUT_PATH} ${BUILD_PRODUCT} PARENT_SCOPE)
+   endif()
