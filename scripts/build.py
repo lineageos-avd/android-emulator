@@ -72,6 +72,14 @@ def main():
                 ['/usr/bin/xcrun', '--sdk', 'macosx', '--show-sdk-path'], text=True).strip()
         deployment = '11.0' if args.target == 'darwin-aarch64' else '10.14'
         env.update(EMULATOR_MACOS_SDK=sdk, SDKROOT=sdk, MACOSX_DEPLOYMENT_TARGET=deployment)
+        sdk_path = Path(sdk).resolve()
+        xcode = next((path for path in sdk_path.parents if path.suffix == '.app'), None)
+        developer = xcode / 'Contents/Developer' if xcode else Path('/Library/Developer/CommandLineTools')
+        if (developer / 'usr/bin/mig').is_file():
+            # Nix's DEVELOPER_DIR points at SDK headers only, not Apple tools.
+            env['DEVELOPER_DIR'] = str(developer)
+            env['PATH'] = str(developer / 'usr/bin') + os.pathsep + env.get('PATH', '')
+
         # Override Nix's SDK CMake defaults when using Google's compiler.
         # Nix's SDK strips libc++ stubs because its own toolchain supplies them.
         command += ['--cmake_option', 'CMAKE_OSX_SYSROOT=' + sdk,

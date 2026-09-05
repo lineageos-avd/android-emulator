@@ -1,0 +1,11 @@
+--- a/android/third_party/crashpad/util/CMakeLists.txt
++++ b/android/third_party/crashpad/util/CMakeLists.txt
+@@ -25,7 +25,7 @@
+ 
+   set(mig_GEN "")
+   if(DARWIN_AARCH64)
+-    set(mig_AARCH "arm")
++    set(mig_AARCH "arm64")
+   elseif(DARWIN_X86_64)
+     set(mig_AARCH "x86_64")
+   else()
