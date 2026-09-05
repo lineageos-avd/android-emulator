@@ -1,6 +1,7 @@
 /source/
 /out/
 /dist/
+/target/
 result
 __pycache__/
 *.pyc
