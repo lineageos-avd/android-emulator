@@ -11,7 +11,9 @@ macOS Apple Silicon**. Hub selects them from the maintained catalog below.
 All four targets passed their upstream unit suites and native packaged executable
 checks. Linux KVM and Apple Silicon HVF also passed LineageOS guest validation;
 Windows WHPX and Intel Mac HVF guest boot remain unverified for this preview.
-Each target keeps its exact source recipe, package provenance and validation record.
+Each target keeps its exact source recipe, package provenance and validation record
+in the paired [support release](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1-support).
+The main preview release contains exactly four runtime SDK ZIPs, one per target.
 
 ## Build
 
@@ -55,9 +57,19 @@ changes on the Lab machine. Native preview packages remain unsigned/not notarize
 hardware acceleration is a separate smoke-test requirement before a stable release.
 
 Every published target requires its compiled archive, upstream test passes,
-provenance, notices and corresponding source archive. Imported `source-*` previews
-can publish completed targets incrementally, with their actual per-target recipe
-commits; unavailable targets are omitted from the catalog. The schema is:
+provenance, notices and corresponding source archive. Releases use two linked tags:
+
+| Release | Assets |
+| --- | --- |
+| `<tag>` | Exactly four runtime SDK ZIPs: Linux x86_64, Windows x86_64, macOS Intel and macOS Apple Silicon |
+| `<tag>-support` | Corresponding source and source supplements, manifests, provenance, notices, checksums, native verification reports and the release catalog |
+
+The support release is published with `latest=false`; both releases link to each
+other in their notes. CI publishes and validates the public support assets before
+publishing the main SDK assets. It then validates the four uploaded SDKs and their
+supporting records. The public catalog is updated only after both releases pass
+validation. Actual per-target recipe commits are retained, including those used
+by imported `source-*` previews. The catalog schema is:
 
 ```json
 {"schema_version":1,"engines":[{"host_os":"linux","host_arch":"x86_64","version":"35.3.8","url":"HTTPS_RELEASE_ASSET","size":123,"sha256":"HEX","executable":"emulator/emulator"}]}
@@ -70,7 +82,7 @@ Platform tools/ADB come separately from Google and are not bundled here.
 
 The first Linux SDK's ELF version requirements were scanned with `readelf`: the
 highest required GLIBC symbol version is **2.27**, with no external GLIBCXX/CXXABI
-version requirements. The release includes the per-file report. This is an ABI
+version requirements. The support release includes the per-file report. This is an ABI
 requirement inspection, not hardware validation on every older distribution.
 Emulator Hub's separate desktop package has its own glibc 2.35 minimum. NixOS
 users can launch downloaded SDK tools through Hub's supplied FHS runtime.

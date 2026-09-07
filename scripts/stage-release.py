@@ -53,7 +53,12 @@ def main():
         'windows-helpers-source-notice.md')]
     optional += list(args.dist.glob('engine-corresponding-source.tar.gz*'))
     optional += list(args.dist.glob('windows-helpers-corresponding-source-*.tar.gz'))
-    files = {path.name: path for path in [*required, *optional] if path.is_file()}
+    # Windows checkout line endings can differ from Linux. Keep each target's
+    # exact source-offer bytes without a same-name artifact merge overwriting
+    # another target's checksummed file. Linux provides the common source offer.
+    files = {(f'SOURCE_OFFER-{args.target}.md'
+              if path.name == 'SOURCE_OFFER.md' and args.target != 'linux-x86_64'
+              else path.name): path for path in [*required, *optional] if path.is_file()}
     for name in ('SHA256SUMS-source', 'SHA256SUMS-windows-helpers'):
         if name in files:
             for line in files[name].read_text().splitlines():
