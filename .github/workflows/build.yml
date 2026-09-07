@@ -2,7 +2,7 @@ name: Source engine build
 on:
   push:
     branches: [main]
-    tags: ['engine-*']
+    tags: ['engine-*', '!engine-*-support']
     paths: ['default.xml', 'upstream.json', 'patches/**']
   workflow_dispatch:
     inputs:
@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   build:
-    if: github.repository == 'lineageos-avd/android-emulator'
+    if: github.repository == 'lineageos-avd/android-emulator' && !endsWith(github.ref, '-support')
     timeout-minutes: 360
     strategy:
       fail-fast: false
@@ -145,7 +145,7 @@ jobs:
           path: release-artifacts/*
           if-no-files-found: error
   release:
-    if: startsWith(github.ref, 'refs/tags/engine-')
+    if: startsWith(github.ref, 'refs/tags/engine-') && !endsWith(github.ref, '-support')
     needs: build
     runs-on: ubuntu-24.04
     permissions:
@@ -158,11 +158,11 @@ jobs:
           path: dist
           merge-multiple: true
       - run: python3 scripts/catalog.py --dist dist --tag "$GITHUB_REF_NAME" --require-all-targets
-      - name: Publish complete preview build
+      - name: Publish verified supporting source, then the four SDK downloads
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Android Emulator $GITHUB_REF_NAME" --notes-file SOURCE_OFFER.md --prerelease
+        run: python3 scripts/publish-release.py --dist dist --tag "$GITHUB_REF_NAME" --repo "$GH_REPO" --commit "$(git rev-parse HEAD)" --publish
       - name: Update public catalog after publication
         env:
           GH_TOKEN: ${{ github.token }}

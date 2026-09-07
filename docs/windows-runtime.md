@@ -29,6 +29,23 @@ packaging scripts. Runtime binaries remain unmodified Microsoft files, with thei
 license and redistribution sources recorded in `NOTICE.MSVC-RUNTIME.txt` and
 `hub-provenance.json`.
 
+The main `<tag>` release contains exactly four runtime SDK ZIPs, including the
+Windows SDK. Its paired `<tag>-support` release contains corresponding source,
+manifests, external provenance, notices, checksums, native verification reports
+and the release catalog. The support release uses `latest=false`, and both
+release notes link to the other release. Support assets are published and
+validated before the main SDK binaries; the public catalog is updated only after
+both releases and their uploaded assets pass validation.
+
+For the current preview, the Windows SDK is in
+[source-35.3.8-preview.1](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1).
+Its source, packaging history, `NOTICE.MSVC-RUNTIME.txt` and external verification
+records are in
+[source-35.3.8-preview.1-support](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1-support).
+The SDK ZIP retains its embedded licenses and provenance. The legacy Cygwin
+helpers' original sources and recipes are also included in the support release;
+see [their exact source mapping](windows-helpers-source.md).
+
 Primary references:
 
 - [Supported runtime versions](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)

@@ -1,6 +1,8 @@
 # Windows filesystem helper source supplement
 
-This supplement supplies the original Cygwin source packages for the twelve unchanged 32-bit PE files installed under `emulator/bin64/` in the Windows x86_64 Google Emulator SDK. It accompanies source engine 35.3.8 in the [source release](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1).
+This supplement supplies the original Cygwin source packages for the twelve unchanged 32-bit PE files installed under `emulator/bin64/` in the Windows x86_64 Google Emulator SDK. It accompanies source engine 35.3.8: runtime SDKs are in the [main release](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1), and this source supplement, source map, notice and checksums are in the [support release](https://github.com/lineageos-avd/android-emulator/releases/tag/source-35.3.8-preview.1-support).
+
+Each main `<tag>` release contains exactly four runtime SDK ZIPs. The paired `<tag>-support` release contains corresponding source, manifests, provenance, notices, checksums, native verification reports and the release catalog. Support releases use `latest=false`, and both release notes link to each other. Support assets are published and validated before the main binaries; the public catalog is updated only after both releases and their uploaded assets pass validation.
 
 | SDK files | Actual Cygwin source package | Base source archive | Supplement |
 | --- | --- | --- | --- |
@@ -23,4 +25,4 @@ The source archive for Cygwin includes its original `cygwin.cygport`, which sele
 
 `windows-helpers-corresponding-source-35.3.8.tar.gz` contains the eight original `-src.tar.xz` packages under `sources/`, copies of their original recipes and patches under `recipes/`, the full historical index and fixed Google provenance under `provenance/`, and preserved notices under `notices/`. Upstream license files remain inside the original source archives, including GCC's runtime exception, Cygwin/Newlib notices, and the package-specific COPYING files. No additional license terms are introduced.
 
-To inspect a package, verify `SHA256SUMS`, extract its original `-src.tar.xz`, and read its `.cygport` and included patches. The preserved recipes describe the original Cygwin build and installation steps. A historical Cygwin toolchain and the recipe's build dependencies are needed to rebuild. This verifies source/package correspondence; these helpers were not rebuilt, and byte-for-byte rebuild reproducibility is not claimed. Existing SDK binaries and previously published release assets are unchanged.
+To inspect a package, verify `SHA256SUMS`, extract its original `-src.tar.xz`, and read its `.cygport` and included patches. The preserved recipes describe the original Cygwin build and installation steps. A historical Cygwin toolchain and the recipe's build dependencies are needed to rebuild. This verifies source/package correspondence; these helpers were not rebuilt, and byte-for-byte rebuild reproducibility is not claimed. Moving the supporting files to the paired release preserves their bytes and checksums; the four SDK ZIPs remain in the main release.
